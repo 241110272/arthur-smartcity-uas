@@ -420,6 +420,35 @@ function setupEventListeners() {
       window.location.href = '/';
     });
   }
+
+  // Theme Toggle
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  if (themeToggleBtn) {
+    // Check saved theme
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      themeToggleBtn.innerHTML = '<i class="fas fa-sun text-warning"></i>';
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+
+    themeToggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      if (newTheme === 'light') {
+        themeToggleBtn.innerHTML = '<i class="fas fa-sun text-warning"></i>';
+      } else {
+        themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+      }
+    });
+  }
 }
 
 function bindModalForms() {
@@ -1279,11 +1308,11 @@ async function showTab(tabName) {
   });
 
   const tabIdMap = {
+    'main': 'mainDashboard',
     'emergency-alerts': 'emergencyAlertsTab',
     'air-quality': 'airQualityTab',
     'transportation': 'transportationTab',
     'feedback': 'feedbackTab',
-    'analytics': 'analyticsTab',
     'traffic-lights': 'trafficLightsTab',
     'pedestrians': 'pedestriansTab',
     'incidents': 'incidentsTab',
@@ -1298,7 +1327,9 @@ async function showTab(tabName) {
     // Small timeout for CSS transition to trigger after display:block
     setTimeout(() => tabElement.classList.add('active'), 10);
 
-    if (tabName === 'emergency-alerts') {
+    if (tabName === 'main') {
+      await initializeCharts();
+    } else if (tabName === 'emergency-alerts') {
       showSkeleton('emergencyAlertsTable', 5, 7);
       await loadEmergencyAlerts();
     } else if (tabName === 'air-quality') {
