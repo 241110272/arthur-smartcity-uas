@@ -779,8 +779,8 @@ async function viewEmergencyAlert(id) {
   try {
     const response = await makeRequest(`/emergency-alerts/${id}`);
     if (response?.success && response.data) {
-      const alert = response.data;
-      alert(`Emergency Alert:\nType: ${alert.type}\nLocation: ${alert.location}\nSeverity: ${alert.severity}\nStatus: ${alert.status}\nDescription: ${alert.description || '-'}\nCreated: ${formatDate(alert.created_at)}`);
+      const alertData = response.data;
+      window.alert(`Emergency Alert:\nType: ${alertData.alert_type}\nLocation: ${alertData.location_name}\nSeverity: ${alertData.severity}\nStatus: ${alertData.status}\nDescription: ${alertData.description || '-'}\nCreated: ${formatDate(alertData.created_at)}`);
     }
   } catch (error) {
     console.error('Error fetching alert:', error);

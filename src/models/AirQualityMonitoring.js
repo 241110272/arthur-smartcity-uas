@@ -55,24 +55,24 @@ class AirQualityMonitoring extends BaseModel {
   async getLatestAirQuality() {
     const query = `
       SELECT 
-        location_name,
-        latitude,
-        longitude,
-        aqi,
-        pm2_5,
-        pm10,
-        o3,
-        no2,
-        so2,
-        co,
-        quality_level,
-        recorded_at
-      FROM ${this.tableName}
-      WHERE recorded_at = (
-        SELECT MAX(recorded_at) FROM ${this.tableName} t2 
-        WHERE t2.location_name = ${this.tableName}.location_name
+        aq.location_name,
+        aq.latitude,
+        aq.longitude,
+        aq.aqi,
+        aq.pm2_5,
+        aq.pm10,
+        aq.o3,
+        aq.no2,
+        aq.so2,
+        aq.co,
+        aq.quality_level,
+        aq.recorded_at
+      FROM ${this.tableName} aq
+      WHERE aq.recorded_at = (
+        SELECT MAX(t2.recorded_at) FROM ${this.tableName} t2 
+        WHERE t2.location_name = aq.location_name
       )
-      ORDER BY location_name
+      ORDER BY aq.location_name
     `;
     return await DatabaseUtil.executeSelect(query);
   }
@@ -124,19 +124,28 @@ class AirQualityMonitoring extends BaseModel {
    * Analyze correlation antara traffic dan air quality
    */
   async analyzeTrafficAirCorrelation(days = 7) {
+    // MySQL tidak memiliki CORR(), gunakan Pearson correlation formula manual
     const query = `
       SELECT 
         aqm.location_name,
         AVG(aqm.aqi) as avg_aqi,
         AVG(tm.vehicle_count) as avg_vehicles,
-        CORR(aqm.aqi, tm.vehicle_count) as correlation
+        (
+          (COUNT(*) * SUM(aqm.aqi * tm.vehicle_count) - SUM(aqm.aqi) * SUM(tm.vehicle_count)) /
+          NULLIF(
+            SQRT(
+              (COUNT(*) * SUM(aqm.aqi * aqm.aqi) - SUM(aqm.aqi) * SUM(aqm.aqi)) *
+              (COUNT(*) * SUM(tm.vehicle_count * tm.vehicle_count) - SUM(tm.vehicle_count) * SUM(tm.vehicle_count))
+            ), 0
+          )
+        ) as correlation
       FROM ${this.tableName} aqm
-      LEFT JOIN traffic_monitoring tm 
+      INNER JOIN traffic_monitoring tm 
         ON aqm.location_name = tm.location_name 
         AND DATE(aqm.recorded_at) = DATE(tm.recorded_at)
       WHERE aqm.recorded_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
       GROUP BY aqm.location_name
-      HAVING correlation IS NOT NULL
+      HAVING COUNT(*) > 1
       ORDER BY correlation DESC
     `;
     return await DatabaseUtil.executeSelect(query, [days]);

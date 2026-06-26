@@ -44,7 +44,7 @@ class IncidentReport extends BaseModel {
          LEFT JOIN users u ON ir.user_id = u.id 
          ORDER BY ir.created_at DESC 
          LIMIT ? OFFSET ?`,
-        [limit, offset]
+        [Number(limit), Number(offset)]
       );
 
       const [countResult] = await connection.execute(

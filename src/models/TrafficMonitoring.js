@@ -78,11 +78,11 @@ class TrafficMonitoring extends BaseModel {
     const query = `
       SELECT 
         location_name,
-        latitude,
-        longitude,
-        congestion_level,
-        vehicle_count,
-        average_speed,
+        ANY_VALUE(latitude) as latitude,
+        ANY_VALUE(longitude) as longitude,
+        ANY_VALUE(congestion_level) as congestion_level,
+        ANY_VALUE(vehicle_count) as vehicle_count,
+        ANY_VALUE(average_speed) as average_speed,
         MAX(recorded_at) as last_updated
       FROM ${this.tableName}
       WHERE recorded_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)

@@ -194,7 +194,7 @@ class Utils {
       setTimeout(() => {
         const alert = document.getElementById(alertId);
         if (alert) {
-          const bsAlert = new (window.bootstrap ? window.bootstrap.Alert : function(){return {close: function(){alert.remove()}}};)(alert);
+          const bsAlert = window.bootstrap ? new window.bootstrap.Alert(alert) : { close: function() { alert.remove(); } };
           bsAlert.close();
         }
       }, duration);
@@ -202,4 +202,7 @@ class Utils {
   }
 }
 
-export default Utils;
+// Expose Utils globally (loaded as regular script, not ES module)
+if (typeof window !== 'undefined') {
+  window.Utils = Utils;
+}

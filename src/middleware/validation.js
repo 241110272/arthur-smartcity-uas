@@ -13,7 +13,10 @@ const validateRequest = (req, res, next) => {
 
 /**
  * Helper function untuk sanitasi input
+ * Password fields dikecualikan agar hash bcrypt tidak rusak
  */
+const SKIP_SANITIZE_FIELDS = ['password', 'confirmPassword', 'oldPassword', 'newPassword'];
+
 function sanitizeInput(obj) {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
@@ -26,6 +29,12 @@ function sanitizeInput(obj) {
   const sanitized = {};
   for (const key in obj) {
     const value = obj[key];
+
+    // Skip sanitasi untuk field password agar tidak merusak hash
+    if (SKIP_SANITIZE_FIELDS.includes(key)) {
+      sanitized[key] = value;
+      continue;
+    }
     
     if (typeof value === 'string') {
       // Remove potential SQL injection characters

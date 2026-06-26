@@ -13,7 +13,7 @@ const sessionConfig = session({
   cookie: {
     secure: process.env.NODE_ENV === 'production', // HTTPS only in production
     httpOnly: true, // Prevent client-side JS from accessing cookie
-    sameSite: 'strict', // Prevent CSRF attacks
+    sameSite: 'lax', // Prevent CSRF while allowing external navigation
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     name: 'smartcity_sessionid' // Custom session name
   },
@@ -31,7 +31,7 @@ const cookieConfig = cookieParser(process.env.SESSION_SECRET || 'your-session-se
  * Menambahkan session storage ke request
  */
 const setupSession = (app) => {
-  app.use(cookieConfig);
+  // cookieParser sudah di-setup di server.js, jangan duplikasi
   app.use(sessionConfig);
 };
 

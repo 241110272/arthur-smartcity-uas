@@ -155,7 +155,7 @@ class EmergencyAlert extends BaseModel {
    * Broadcast alert to connected systems
    */
   async broadcastAlert(alertId) {
-    const alert = await this.findOne(alertId);
+    const alert = await this.findById(alertId);
     if (!alert) return null;
 
     // Log broadcast untuk audit trail
