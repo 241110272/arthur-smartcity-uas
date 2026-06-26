@@ -13,14 +13,23 @@ class EmergencyAlertController {
     try {
       const {
         alert_type,
+        type,
         severity,
         location_name,
+        location,
         latitude,
         longitude,
+        lat,
+        lng,
         description
       } = req.body;
 
-      if (!alert_type || !location_name || !latitude || !longitude) {
+      const normalizedAlertType = alert_type || type;
+      const normalizedLocation = location_name || location;
+      const normalizedLatitude = latitude ?? lat;
+      const normalizedLongitude = longitude ?? lng;
+
+      if (!normalizedAlertType || !normalizedLocation || normalizedLatitude === undefined || normalizedLatitude === null || normalizedLatitude === '' || normalizedLongitude === undefined || normalizedLongitude === null || normalizedLongitude === '') {
         return res.status(400).json({
           success: false,
           message: 'Alert type, location, dan koordinat harus diisi'
@@ -28,21 +37,21 @@ class EmergencyAlertController {
       }
 
       const result = await emergencyModel.createAlert({
-        alert_type,
+        alert_type: normalizedAlertType,
         severity: severity || 'medium',
-        location_name,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
+        location_name: normalizedLocation,
+        latitude: parseFloat(normalizedLatitude),
+        longitude: parseFloat(normalizedLongitude),
         description: description || '',
         created_by: req.user?.userId || req.user?.id || 1
       });
 
       // Broadcast alert ke connected systems via Socket.IO
-      req.app.get('io').emit('emergency_alert_created', {
+      req.app.get('io')?.emit('emergency_alert_created', {
         alertId: result.insertId,
-        alert_type,
+        alert_type: normalizedAlertType,
         severity,
-        location_name
+        location_name: normalizedLocation
       });
 
       res.status(201).json({
@@ -182,12 +191,19 @@ class EmergencyAlertController {
       const {
         vehicle_type, // ambulance, fire, police
         location_name,
+        location,
         latitude,
         longitude,
+        lat,
+        lng,
         description
       } = req.body;
 
-      if (!vehicle_type || !location_name) {
+      const normalizedLocation = location_name || location;
+      const normalizedLatitude = latitude ?? lat;
+      const normalizedLongitude = longitude ?? lng;
+
+      if (!vehicle_type || !normalizedLocation) {
         return res.status(400).json({
           success: false,
           message: 'Vehicle type dan location harus diisi'
@@ -198,20 +214,20 @@ class EmergencyAlertController {
       const result = await emergencyModel.createAlert({
         alert_type: 'emergency_vehicle',
         severity: 'critical',
-        location_name,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
+        location_name: normalizedLocation,
+        latitude: parseFloat(normalizedLatitude ?? 0),
+        longitude: parseFloat(normalizedLongitude ?? 0),
         description: `${vehicle_type.toUpperCase()} priority request: ${description || ''}`,
         created_by: req.user?.userId || req.user?.id || 1
       });
 
       // Broadcast ke traffic management system untuk prioritize traffic lights
-      req.app.get('io').emit('emergency_vehicle_priority', {
+      req.app.get('io')?.emit('emergency_vehicle_priority', {
         alertId: result.insertId,
         vehicle_type,
-        location_name,
-        latitude,
-        longitude
+        location_name: normalizedLocation,
+        latitude: normalizedLatitude,
+        longitude: normalizedLongitude
       });
 
       res.status(201).json({
