@@ -1,21 +1,34 @@
-require('dotenv').config();
 const mysql = require('mysql2/promise');
 
-// Build connection config with proper password handling
 const connectionConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  database: process.env.DB_NAME || 'smartcity_traffic',
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME || 'defaultdb',
+
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  enableKeepAlive: true
+
+  connectTimeout: 30000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
+
+  ssl: process.env.DB_SSL === 'true'
+    ? {
+        rejectUnauthorized: false
+      }
+    : undefined
 };
 
-// Only add password if it's not empty
-if (process.env.DB_PASSWORD && process.env.DB_PASSWORD.trim() !== '') {
-  connectionConfig.password = process.env.DB_PASSWORD;
-}
+console.log('Database pool config:', {
+  host: connectionConfig.host,
+  port: connectionConfig.port,
+  user: connectionConfig.user,
+  database: connectionConfig.database,
+  ssl: !!connectionConfig.ssl
+});
 
 const pool = mysql.createPool(connectionConfig);
 
