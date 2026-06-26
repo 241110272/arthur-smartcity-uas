@@ -402,8 +402,11 @@
       </div>
 
       <div class="card ">
-        <div class="card-header  border-bottom">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Air Quality Data</h5>
+          <button id="addAirQualityBtn" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAirQualityModal" style="display:none;">
+            <i class="fas fa-plus"></i> Add Data
+          </button>
         </div>
         <div class="card-body">
           <div id="airQualityContainer" class="table-responsive">
@@ -855,6 +858,131 @@
             <button type="submit" class="btn btn-success">Submit Feedback</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Air Quality Modal -->
+  <div class="modal fade" id="addAirQualityModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Record Air Quality</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="addAirQualityForm">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="aqLocation" class="form-label">Location Name</label>
+              <input type="text" class="form-control" id="aqLocation" required>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="aqLat" class="form-label">Latitude</label>
+                <input type="number" class="form-control" id="aqLat" step="0.00001" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="aqLng" class="form-label">Longitude</label>
+                <input type="number" class="form-control" id="aqLng" step="0.00001" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="aqIndex" class="form-label">AQI Index</label>
+              <input type="number" class="form-control" id="aqIndex" min="0" required>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="aqPM25" class="form-label">PM2.5 (µg/m³)</label>
+                <input type="number" class="form-control" id="aqPM25" step="0.01">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="aqPM10" class="form-label">PM10 (µg/m³)</label>
+                <input type="number" class="form-control" id="aqPM10" step="0.01">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="aqO3" class="form-label">O3 (ppb)</label>
+                <input type="number" class="form-control" id="aqO3" step="0.01">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="aqNO2" class="form-label">NO2 (ppb)</label>
+                <input type="number" class="form-control" id="aqNO2" step="0.01">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="aqCO" class="form-label">CO (ppm)</label>
+                <input type="number" class="form-control" id="aqCO" step="0.01">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Data</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Air Quality Modal -->
+  <div class="modal fade" id="viewAirQualityModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Air Quality Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <h4 id="viewAqLocation" class="mb-3"></h4>
+          <div class="d-flex justify-content-between mb-4">
+            <div>
+              <p class="text-muted mb-1">Status</p>
+              <h5><span id="viewAqStatus" class="badge"></span></h5>
+            </div>
+            <div class="text-end">
+              <p class="text-muted mb-1">AQI Index</p>
+              <h3 id="viewAqIndex" class="mb-0"></h3>
+            </div>
+          </div>
+          
+          <h6 class="border-bottom pb-2 mb-3">Pollutants Info</h6>
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="p-2 border rounded border-color">
+                <small class="text-muted d-block">PM2.5</small>
+                <strong id="viewAqPm25"></strong> µg/m³
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 border rounded border-color">
+                <small class="text-muted d-block">PM10</small>
+                <strong id="viewAqPm10"></strong> µg/m³
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-2 border rounded border-color">
+                <small class="text-muted d-block">O3</small>
+                <strong id="viewAqO3"></strong>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-2 border rounded border-color">
+                <small class="text-muted d-block">NO2</small>
+                <strong id="viewAqNo2"></strong>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-2 border rounded border-color">
+                <small class="text-muted d-block">CO</small>
+                <strong id="viewAqCo"></strong>
+              </div>
+            </div>
+          </div>
+          <p class="text-muted text-end mt-4 mb-0"><small>Recorded at: <span id="viewAqRecordedAt"></span></small></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
       </div>
     </div>
   </div>

@@ -882,6 +882,8 @@ async function viewEmergencyAlert(id) {
   }
 }
 
+let globalAirQualityData = [];
+
 /**
  * Load Air Quality Data
  */
@@ -891,13 +893,19 @@ async function loadAirQualityData() {
     if (response?.success) {
       const rawData = Array.isArray(response.data) ? response.data : response.data?.data || [];
       const data = rawData.map(item => ({
+        id: item.id,
         location_name: item.location_name || item.location || 'Unknown',
         aqi: item.aqi ?? item.aqi_index ?? item.aqiIndex ?? 0,
         pm2_5: item.pm2_5 ?? item.pm25 ?? item.pm_2_5 ?? null,
         pm10: item.pm10 ?? item.pm10 ?? null,
+        o3: item.o3 ?? null,
+        no2: item.no2 ?? null,
+        co: item.co ?? null,
         quality_level: item.quality_level || item.qualityLevel || 'Unknown',
         recorded_at: item.recorded_at || item.updated_at || item.last_updated || null
       }));
+      
+      globalAirQualityData = data;
       
       // Update counts based on quality level
       const goodCount = data.filter(d => d.quality_level === 'Good').length;
@@ -910,7 +918,10 @@ async function loadAirQualityData() {
 
       const isAdmin = isAdminUser(currentUser);
       const aqActionHeader = document.getElementById('aqActionHeader');
-      if (aqActionHeader) aqActionHeader.style.display = isAdmin ? 'table-cell' : 'none';
+      if (aqActionHeader) aqActionHeader.style.display = 'table-cell';
+      
+      const addAqBtn = document.getElementById('addAirQualityBtn');
+      if (addAqBtn) addAqBtn.style.display = isAdmin ? 'inline-block' : 'none';
 
       // Build table
       const dataHTML = data.map(item => `
@@ -921,7 +932,10 @@ async function loadAirQualityData() {
           <td>${item.pm10 ?? '-'}</td>
           <td><span class="badge bg-${getQualityColor(item.quality_level)}">${item.quality_level}</span></td>
           <td>${item.recorded_at ? formatDate(item.recorded_at) : '-'}</td>
-          ${isAdmin ? `<td><button class="btn btn-sm btn-warning" onclick="editAirQuality(${item.id || 0}, '${item.location_name}', ${item.aqi})">Edit</button></td>` : ''}
+          <td>
+            <button class="btn btn-sm btn-info me-1" onclick="viewAirQuality(${item.id})">View</button>
+            ${isAdmin ? `<button class="btn btn-sm btn-warning" onclick="editAirQuality(${item.id}, '${item.location_name}', ${item.aqi})">Edit</button>` : ''}
+          </td>
         </tr>
       `).join('');
 
@@ -930,6 +944,28 @@ async function loadAirQualityData() {
   } catch (error) {
     console.error('Error loading air quality data:', error);
   }
+}
+
+function viewAirQuality(id) {
+  const aq = globalAirQualityData.find(item => item.id == id);
+  if (!aq) return showError('Data not found');
+  
+  document.getElementById('viewAqLocation').textContent = aq.location_name;
+  document.getElementById('viewAqIndex').textContent = aq.aqi;
+  
+  const statusBadge = document.getElementById('viewAqStatus');
+  statusBadge.textContent = aq.quality_level;
+  statusBadge.className = `badge bg-${getQualityColor(aq.quality_level)}`;
+  
+  document.getElementById('viewAqPm25').textContent = aq.pm2_5 ?? '-';
+  document.getElementById('viewAqPm10').textContent = aq.pm10 ?? '-';
+  document.getElementById('viewAqO3').textContent = aq.o3 ?? '-';
+  document.getElementById('viewAqNo2').textContent = aq.no2 ?? '-';
+  document.getElementById('viewAqCo').textContent = aq.co ?? '-';
+  document.getElementById('viewAqRecordedAt').textContent = aq.recorded_at ? formatDate(aq.recorded_at) : '-';
+  
+  const modal = new bootstrap.Modal(document.getElementById('viewAirQualityModal'));
+  modal.show();
 }
 
 async function editAirQuality(id, locationName, currentAqi) {
@@ -1391,6 +1427,50 @@ function showSkeletonGrid(containerId, count = 4) {
  * Handle New Feature Form Submissions
  */
 function bindNewFeatureForms() {
+  // Air Quality Form
+  const addAirQualityForm = document.getElementById('addAirQualityForm');
+  if (addAirQualityForm) {
+    addAirQualityForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const aqiNum = parseInt(document.getElementById('aqIndex').value) || 0;
+      let qualityLevel = 'Moderate';
+      if (aqiNum <= 50) qualityLevel = 'Good';
+      else if (aqiNum <= 100) qualityLevel = 'Moderate';
+      else if (aqiNum <= 150) qualityLevel = 'Unhealthy for Sensitive Groups';
+      else if (aqiNum <= 200) qualityLevel = 'Unhealthy';
+      else if (aqiNum <= 300) qualityLevel = 'Very Unhealthy';
+      else qualityLevel = 'Hazardous';
+
+      const formData = {
+        location_name: document.getElementById('aqLocation').value,
+        latitude: parseFloat(document.getElementById('aqLat').value) || 0,
+        longitude: parseFloat(document.getElementById('aqLng').value) || 0,
+        aqi: aqiNum,
+        quality_level: qualityLevel,
+        pm2_5: parseFloat(document.getElementById('aqPM25').value) || null,
+        pm10: parseFloat(document.getElementById('aqPM10').value) || null,
+        o3: parseFloat(document.getElementById('aqO3').value) || null,
+        no2: parseFloat(document.getElementById('aqNO2').value) || null,
+        co: parseFloat(document.getElementById('aqCO').value) || null
+      };
+
+      const response = await makeRequest('/air-quality/record', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response?.success) {
+        showSuccess('Air Quality data added successfully!');
+        addAirQualityForm.reset();
+        bootstrap.Modal.getInstance(document.getElementById('addAirQualityModal')).hide();
+        await loadAirQualityData();
+      } else {
+        showError(response?.message || 'Failed to add air quality data');
+      }
+    });
+  }
+
   // Emergency Alert Form
   const emergencyAlertForm = document.getElementById('emergencyAlertForm');
   if (emergencyAlertForm) {
@@ -1411,7 +1491,7 @@ function bindNewFeatureForms() {
       });
 
       if (response?.success) {
-        alert('Alert created successfully!');
+        showSuccess('Alert created successfully!');
         emergencyAlertForm.reset();
         bootstrap.Modal.getInstance(document.getElementById('emergencyAlertModal')).hide();
         await loadEmergencyAlerts();
@@ -1441,7 +1521,7 @@ function bindNewFeatureForms() {
       });
 
       if (response?.success) {
-        alert('Vehicle registered successfully!');
+        showSuccess('Vehicle registered successfully!');
         transportationForm.reset();
         bootstrap.Modal.getInstance(document.getElementById('transportationModal')).hide();
         await loadPublicTransportationData();
@@ -1470,7 +1550,7 @@ function bindNewFeatureForms() {
       });
 
       if (response?.success) {
-        alert('Feedback submitted successfully! Thank you!');
+        showSuccess('Feedback submitted successfully!');
         feedbackForm.reset();
         bootstrap.Modal.getInstance(document.getElementById('feedbackModal')).hide();
         await loadCitizenFeedback();

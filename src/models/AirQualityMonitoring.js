@@ -63,6 +63,7 @@ class AirQualityMonitoring extends BaseModel {
   async getLatestAirQuality() {
     const query = `
       SELECT 
+        aq.id,
         aq.location_name,
         aq.latitude,
         aq.longitude,
