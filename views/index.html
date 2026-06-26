@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart City Traffic Management System</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-traffic-light"></i> Smart City Traffic Management
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-user-circle"></i> Akun
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="#" id="profileLink">Profil</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="logoutLink">Logout</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/login">Login</a></li>
+              <li><a class="dropdown-item" href="/register">Daftar</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section bg-gradient text-white py-5">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-6 py-5">
+          <h1 class="display-4 fw-bold mb-4">Smart City Traffic Management</h1>
+          <p class="lead mb-4">Sistem manajemen lalu lintas yang cerdas untuk mengoptimalkan aliran kendaraan dan keamanan pejalan kaki di kota Anda.</p>
+          <div class="d-flex gap-2">
+            <a href="/dashboard" class="btn btn-light btn-lg">
+              <i class="fas fa-eye"></i> Lihat Dashboard
+            </a>
+            <a href="/register" class="btn btn-outline-light btn-lg">
+              <i class="fas fa-user-plus"></i> Daftar Sekarang
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="feature-illustration">
+            <i class="fas fa-city fa-10x text-white opacity-25"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section py-5">
+    <div class="container">
+      <h2 class="text-center mb-5">Fitur Utama Sistem</h2>
+      
+      <!-- Core Features -->
+      <div class="mb-5">
+        <h5 class="text-center text-muted mb-3">Manajemen Lalu Lintas Inti</h5>
+        <div class="row g-4 mb-4">
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card card h-100 shadow-sm">
+              <div class="card-body text-center">
+                <i class="fas fa-traffic-light feature-icon text-success mb-3"></i>
+                <h5 class="card-title">Traffic Light Control</h5>
+                <p class="card-text">Kontrol real-time traffic light dengan automation berdasarkan kepadatan kendaraan</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card card h-100 shadow-sm">
+              <div class="card-body text-center">
+                <i class="fas fa-person-walking feature-icon text-info mb-3"></i>
+                <h5 class="card-title">Pedestrian Crossing</h5>
+                <p class="card-text">Manajemen zebra crossing dengan signal yang responsif terhadap kebutuhan pejalan kaki</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card card h-100 shadow-sm">
+              <div class="card-body text-center">
+                <i class="fas fa-car feature-icon text-primary mb-3"></i>
+                <h5 class="card-title">Live Traffic Monitoring</h5>
+                <p class="card-text">Monitoring real-time kemacetan dan aliran kendaraan di seluruh lokasi kota</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card card h-100 shadow-sm">
+              <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle feature-icon text-danger mb-3"></i>
+                <h5 class="card-title">Incident Reporting</h5>
+                <p class="card-text">Sistem pelaporan insiden lalu lintas dengan prioritas otomatis</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart City Features -->
+      <div>
+        <h5 class="text-center text-muted mb-3">Fitur Kota Pintar Tambahan</h5>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card h-100 shadow-sm border-left-emergency">
+              <div class="card-body text-center">
+                <i class="fas fa-bell feature-icon text-danger mb-3"></i>
+                <h5 class="card-title">Emergency Alerts</h5>
+                <p class="card-text">Sistem alert darurat real-time untuk kecelakaan, bencana, dan kendaraan emergency dengan routing prioritas</p>
+                <a href="/dashboard?tab=emergency" class="btn btn-sm btn-outline-danger mt-2">Akses Fitur</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card h-100 shadow-sm border-left-airquality">
+              <div class="card-body text-center">
+                <i class="fas fa-wind feature-icon text-warning mb-3"></i>
+                <h5 class="card-title">Air Quality Monitoring</h5>
+                <p class="card-text">Pemantauan kualitas udara real-time dengan tracking polutan dan korelasi data lalu lintas</p>
+                <a href="/dashboard?tab=air-quality" class="btn btn-sm btn-outline-warning mt-2">Akses Fitur</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card h-100 shadow-sm border-left-transportation">
+              <div class="card-body text-center">
+                <i class="fas fa-bus feature-icon text-info mb-3"></i>
+                <h5 class="card-title">Public Transportation</h5>
+                <p class="card-text">Manajemen transportasi publik dengan tracking real-time, occupancy monitoring, dan pelaporan masalah</p>
+                <a href="/dashboard?tab=transportation" class="btn btn-sm btn-outline-info mt-2">Akses Fitur</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card h-100 shadow-sm border-left-feedback">
+              <div class="card-body text-center">
+                <i class="fas fa-comments feature-icon text-success mb-3"></i>
+                <h5 class="card-title">Citizen Feedback</h5>
+                <p class="card-text">Sistem feedback dari masyarakat untuk keluhan, saran, dan laporan dengan manajemen prioritas</p>
+                <a href="/dashboard?tab=feedback" class="btn btn-sm btn-outline-success mt-2">Akses Fitur</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="feature-card card h-100 shadow-sm border-left-analytics">
+              <div class="card-body text-center">
+                <i class="fas fa-chart-line feature-icon text-primary mb-3"></i>
+                <h5 class="card-title">Analytics & Reporting</h5>
+                <p class="card-text">Analitik mendalam dengan visualisasi data dan laporan komprehensif untuk decision making</p>
+                <a href="/dashboard?tab=analytics" class="btn btn-sm btn-outline-primary mt-2">Akses Fitur</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it Works Section -->
+  <section class="how-works-section py-5 bg-white">
+    <div class="container">
+      <h2 class="text-center mb-5">Cara Kerja Sistem</h2>
+      <div class="row">
+        <div class="col-md-6 mb-4">
+          <div class="d-flex gap-3">
+            <div class="step-number">1</div>
+            <div>
+              <h5>Monitoring Real-time</h5>
+              <p>Sistem secara otomatis memonitor kepadatan kendaraan dan aktivitas pejalan kaki di setiap interseksi</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 mb-4">
+          <div class="d-flex gap-3">
+            <div class="step-number">2</div>
+            <div>
+              <h5>Analisis Data</h5>
+              <p>Data lalu lintas dianalisis menggunakan algoritma untuk menentukan status optimal traffic light</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 mb-4">
+          <div class="d-flex gap-3">
+            <div class="step-number">3</div>
+            <div>
+              <h5>Optimasi Dinamis</h5>
+              <p>Traffic light secara dinamis menyesuaikan durasi dan status berdasarkan kondisi real-time</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 mb-4">
+          <div class="d-flex gap-3">
+            <div class="step-number">4</div>
+            <div>
+              <h5>Laporan & Notifikasi</h5>
+              <p>Sistem mengirim notifikasi untuk insiden penting dan menghasilkan laporan komprehensif</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action Section -->
+  <section class="cta-section py-5 bg-gradient text-white">
+    <div class="container text-center">
+      <h2 class="mb-4">Siap untuk Mengelola Lalu Lintas Anda?</h2>
+      <p class="lead mb-4">Bergabunglah dengan kami untuk menciptakan kota yang lebih cerdas dan lebih efisien</p>
+      <a href="/register" class="btn btn-light btn-lg">Mulai Sekarang</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <h6>Smart City Traffic Management</h6>
+          <p class="small">Sistem manajemen lalu lintas pintar untuk kota modern</p>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h6>Kontak</h6>
+          <p class="small">Email: info@smartcity.com<br>Phone: +62 21 XXXX XXXX</p>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h6>Sosial Media</h6>
+          <p class="small">
+            <a href="#" class="text-white text-decoration-none"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="text-white text-decoration-none ms-2"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-white text-decoration-none ms-2"><i class="fab fa-instagram"></i></a>
+          </p>
+        </div>
+      </div>
+      <hr>
+      <div class="text-center small">
+        <p>&copy; 2026 Smart City Traffic Management System. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

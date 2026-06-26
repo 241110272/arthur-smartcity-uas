@@ -1,0 +1,63 @@
+/**
+ * Request Validation Middleware
+ */
+const validateRequest = (req, res, next) => {
+  // Set request ID untuk logging
+  req.requestId = Date.now() + Math.random().toString(36).substr(2, 9);
+  
+  // Sanitasi input
+  req.body = sanitizeInput(req.body);
+  
+  next();
+};
+
+/**
+ * Helper function untuk sanitasi input
+ */
+function sanitizeInput(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeInput(item));
+  }
+
+  const sanitized = {};
+  for (const key in obj) {
+    const value = obj[key];
+    
+    if (typeof value === 'string') {
+      // Remove potential SQL injection characters
+      sanitized[key] = value
+        .replace(/['"`;]/g, '')
+        .trim();
+    } else if (typeof value === 'object') {
+      sanitized[key] = sanitizeInput(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+
+  return sanitized;
+}
+
+/**
+ * Logger Middleware
+ */
+const logger = (req, res, next) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Status: ${res.statusCode} - Duration: ${duration}ms`);
+  });
+
+  next();
+};
+
+module.exports = {
+  validateRequest,
+  logger,
+  sanitizeInput
+};

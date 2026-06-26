@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Smart City Traffic Management System</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .widget {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-left: 4px solid #2196F3;
+    }
+
+    .widget.warning {
+      border-left-color: #ff9800;
+    }
+
+    .widget.danger {
+      border-left-color: #f44336;
+    }
+
+    .widget.success {
+      border-left-color: #4caf50;
+    }
+
+    .widget h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .widget-value {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #2196F3;
+      margin: 10px 0;
+    }
+
+    .widget.warning .widget-value {
+      color: #ff9800;
+    }
+
+    .widget.danger .widget-value {
+      color: #f44336;
+    }
+
+    .widget.success .widget-value {
+      color: #4caf50;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background-color: #2196F3;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #0b7dda;
+    }
+
+    .btn.secondary {
+      background-color: #6c757d;
+    }
+
+    .btn.secondary:hover {
+      background-color: #5a6268;
+    }
+
+    .btn.danger {
+      background-color: #f44336;
+    }
+
+    .btn.danger:hover {
+      background-color: #da190b;
+    }
+
+    .alerts-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .alert-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+      background-color: #fff3cd;
+      border-left: 4px solid #ff9800;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .alert-item.critical {
+      background-color: #f8d7da;
+      border-left-color: #f44336;
+    }
+
+    .alert-item.high {
+      background-color: #fff3cd;
+      border-left-color: #ff9800;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .status-badge.active {
+      background-color: #4caf50;
+    }
+
+    .status-badge.resolved {
+      background-color: #2196F3;
+    }
+
+    .status-badge.critical {
+      background-color: #f44336;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .table th {
+      background-color: #f5f5f5;
+      border-bottom: 2px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .table td {
+      border-bottom: 1px solid #ddd;
+      padding: 10px;
+    }
+
+    .table tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-top: 20px;
+    }
+
+    .real-time {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .live-indicator {
+      width: 12px;
+      height: 12px;
+      background-color: #4caf50;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 1200px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0 0 10px 0;
+    }
+
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Admin Dashboard</h1>
+      <p>Smart City Traffic Management System</p>
+      <div class="real-time">
+        <span class="live-indicator"></span>
+        <span>Real-time Monitoring Active</span>
+      </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="controls">
+      <button class="btn" onclick="loadDashboard()">Refresh Data</button>
+      <button class="btn secondary" onclick="toggleAutoRefresh()">Toggle Auto-Refresh</button>
+      <button class="btn secondary" onclick="generateReport()">Generate Report</button>
+      <button class="btn danger" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-container">
+      <!-- Traffic Monitoring Widget -->
+      <div class="widget">
+        <h3>Real-time Traffic Monitoring</h3>
+        <div class="widget-value" id="traffic-count">0</div>
+        <p>Active Monitoring Points</p>
+        <button class="btn" onclick="viewTraffic()">View Details</button>
+      </div>
+
+      <!-- Emergency Alerts Widget -->
+      <div class="widget danger">
+        <h3>Emergency Alerts</h3>
+        <div class="widget-value" id="alert-count">0</div>
+        <p>Active Alerts</p>
+        <button class="btn danger" onclick="viewAlerts()">View All</button>
+      </div>
+
+      <!-- Air Quality Widget -->
+      <div class="widget warning">
+        <h3>Air Quality Status</h3>
+        <div class="widget-value" id="unhealthy-count">0</div>
+        <p>Unhealthy Locations</p>
+        <button class="btn" onclick="viewAirQuality()">View Details</button>
+      </div>
+
+      <!-- Public Transportation Widget -->
+      <div class="widget success">
+        <h3>Public Transportation</h3>
+        <div class="widget-value" id="transport-count">0</div>
+        <p>Active Vehicles</p>
+        <button class="btn" onclick="viewTransportation()">View Details</button>
+      </div>
+
+      <!-- Citizen Feedback Widget -->
+      <div class="widget">
+        <h3>Citizen Feedback</h3>
+        <div class="widget-value" id="feedback-count">0</div>
+        <p>Open Tickets</p>
+        <button class="btn" onclick="viewFeedback()">View All</button>
+      </div>
+
+      <!-- System Health Widget -->
+      <div class="widget success">
+        <h3>System Health</h3>
+        <div class="widget-value" id="health-status">OK</div>
+        <p>Server Status</p>
+        <button class="btn" onclick="checkHealth()">Check Now</button>
+      </div>
+    </div>
+
+    <!-- Critical Alerts Section -->
+    <div style="margin-top: 30px;">
+      <h2>Critical Alerts</h2>
+      <div class="widget danger">
+        <ul class="alerts-list" id="critical-alerts-list">
+          <li>No critical alerts at the moment</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Recent Feedback Section -->
+    <div style="margin-top: 30px;">
+      <h2>Recent High Priority Feedback</h2>
+      <div class="widget">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="feedback-table-body">
+            <tr>
+              <td colspan="5" style="text-align: center;">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Traffic Statistics Section -->
+    <div style="margin-top: 30px; margin-bottom: 30px;">
+      <h2>Traffic Statistics</h2>
+      <div class="grid-2">
+        <div class="widget">
+          <h3>Congestion Status</h3>
+          <ul id="congestion-status">
+            <li>Loading...</li>
+          </ul>
+        </div>
+        <div class="widget">
+          <h3>Top Affected Locations</h3>
+          <ul id="top-locations">
+            <li>Loading...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    // Global variables
+    let autoRefresh = true;
+    let refreshInterval = null;
+    const token = localStorage.getItem('authToken');
+    const socket = io();
+
+    // Check authentication
+    if (!token) {
+      window.location.href = '/login';
+    }
+
+    // Subscribe to real-time updates
+    socket.emit('subscribe_traffic_monitoring');
+    socket.emit('subscribe_emergency_alerts');
+    socket.emit('subscribe_air_quality');
+    socket.emit('subscribe_transportation');
+
+    // Listen for real-time updates
+    socket.on('emergency_alert_created', (alert) => {
+      console.log('New emergency alert:', alert);
+      loadDashboard();
+    });
+
+    socket.on('transport_location_update', (update) => {
+      console.log('Transportation update:', update);
+    });
+
+    // Load initial dashboard data
+    window.addEventListener('load', () => {
+      loadDashboard();
+      startAutoRefresh();
+    });
+
+    async function loadDashboard() {
+      try {
+        // Load traffic monitoring data
+        const trafficRes = await fetch('/api/traffic-monitoring/latest', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const trafficData = await trafficRes.json();
+        document.getElementById('traffic-count').textContent = 
+          trafficData.data ? trafficData.data.length : 0;
+
+        // Load emergency alerts
+        const alertsRes = await fetch('/api/emergency-alerts/admin/critical', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const alertsData = await alertsRes.json();
+        const alertCount = alertsData.data ? alertsData.data.length : 0;
+        document.getElementById('alert-count').textContent = alertCount;
+        updateCriticalAlerts(alertsData.data || []);
+
+        // Load air quality data
+        const airRes = await fetch('/api/air-quality/unhealthy', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const airData = await airRes.json();
+        document.getElementById('unhealthy-count').textContent = 
+          airData.data ? airData.data.length : 0;
+
+        // Load transportation data
+        const transportRes = await fetch('/api/public-transportation/active', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const transportData = await transportRes.json();
+        document.getElementById('transport-count').textContent = 
+          transportData.data ? transportData.data.length : 0;
+
+        // Load feedback data
+        const feedbackRes = await fetch('/api/feedback/admin/open', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const feedbackData = await feedbackRes.json();
+        const openFeedback = feedbackData.data ? feedbackData.data.length : 0;
+        document.getElementById('feedback-count').textContent = openFeedback;
+        updateFeedbackTable(feedbackData.data || []);
+
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+      }
+    }
+
+    function updateCriticalAlerts(alerts) {
+      const list = document.getElementById('critical-alerts-list');
+      if (alerts.length === 0) {
+        list.innerHTML = '<li>No critical alerts</li>';
+        return;
+      }
+
+      list.innerHTML = alerts.slice(0, 5).map(alert => `
+        <li class="alert-item ${alert.severity === 'critical' ? 'critical' : 'high'}">
+          <div>
+            <strong>${alert.alert_type}</strong>: ${alert.description || alert.location_name}
+            <span class="status-badge active">${alert.severity.toUpperCase()}</span>
+          </div>
+          <button class="btn" onclick="resolveAlert(${alert.id})">Resolve</button>
+        </li>
+      `).join('');
+    }
+
+    function updateFeedbackTable(feedback) {
+      const tbody = document.getElementById('feedback-table-body');
+      if (feedback.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No feedback</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = feedback.slice(0, 5).map(item => `
+        <tr>
+          <td>${item.feedback_type}</td>
+          <td>${item.title.substring(0, 30)}...</td>
+          <td><span class="status-badge active">${item.status}</span></td>
+          <td>${item.priority.toUpperCase()}</td>
+          <td>
+            <button class="btn" onclick="viewFeedbackDetail(${item.id})">View</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function startAutoRefresh() {
+      if (autoRefresh) {
+        refreshInterval = setInterval(loadDashboard, 30000); // Refresh every 30 seconds
+      }
+    }
+
+    function toggleAutoRefresh() {
+      autoRefresh = !autoRefresh;
+      if (autoRefresh) {
+        startAutoRefresh();
+        alert('Auto-refresh enabled (30 seconds interval)');
+      } else {
+        clearInterval(refreshInterval);
+        alert('Auto-refresh disabled');
+      }
+    }
+
+    function viewTraffic() {
+      window.location.href = '#/traffic-monitoring';
+    }
+
+    function viewAlerts() {
+      window.location.href = '#/emergency-alerts';
+    }
+
+    function viewAirQuality() {
+      window.location.href = '#/air-quality';
+    }
+
+    function viewTransportation() {
+      window.location.href = '#/transportation';
+    }
+
+    function viewFeedback() {
+      window.location.href = '#/feedback';
+    }
+
+    async function resolveAlert(alertId) {
+      if (confirm('Mark this alert as resolved?')) {
+        try {
+          const res = await fetch(`/api/emergency-alerts/${alertId}/status`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'resolved', resolvedAt: new Date() })
+          });
+          if (res.ok) {
+            alert('Alert resolved successfully');
+            loadDashboard();
+          }
+        } catch (error) {
+          console.error('Error resolving alert:', error);
+        }
+      }
+    }
+
+    function viewFeedbackDetail(feedbackId) {
+      window.location.href = `/feedback/${feedbackId}`;
+    }
+
+    async function checkHealth() {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        document.getElementById('health-status').textContent = data.status || 'OK';
+      } catch (error) {
+        document.getElementById('health-status').textContent = 'ERROR';
+      }
+    }
+
+    function generateReport() {
+      alert('Report generation feature coming soon!');
+    }
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('authToken');
+        window.location.href = '/login';
+      }
+    }
+  </script>
+</body>
+</html>
