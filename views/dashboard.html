@@ -36,7 +36,6 @@
               <li><a class="dropdown-item" href="#" data-tab="air-quality"><i class="fas fa-wind"></i> Air Quality</a></li>
               <li><a class="dropdown-item" href="#" data-tab="transportation"><i class="fas fa-bus"></i> Public Transportation</a></li>
               <li><a class="dropdown-item" href="#" data-tab="feedback"><i class="fas fa-comments"></i> Citizen Feedback</a></li>
-              <li><a class="dropdown-item" href="#" data-tab="analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
             </ul>
           </li>
 
@@ -132,26 +131,28 @@
         </div>
       </div>
 
-      <!-- Traffic Status and Charts Row -->
+      <!-- Analytics Chart Row -->
       <div class="row mb-4">
         <div class="col-lg-8">
           <div class="card ">
-            <div class="card-header  border-bottom">
-              <h5 class="mb-0">Traffic Conditions</h5>
+            <div class="card-header border-bottom">
+              <h5 class="mb-0">Cumulative Analytics</h5>
             </div>
             <div class="card-body">
-              <canvas id="trafficChart"></canvas>
+              <canvas id="analyticChart" style="max-height: 350px;"></canvas>
             </div>
           </div>
         </div>
 
         <div class="col-lg-4">
-          <div class="card ">
-            <div class="card-header  border-bottom">
-              <h5 class="mb-0">Traffic Lights Status</h5>
+          <div class="card h-100">
+            <div class="card-header border-bottom">
+              <h5 class="mb-0">System Log Overview</h5>
             </div>
-            <div class="card-body" id="trafficLightsList" style="max-height: 400px; overflow-y: auto;">
-              <p class="text-muted">Loading...</p>
+            <div class="card-body" style="max-height: 350px; overflow-y: auto;">
+              <ul id="systemLogList" class="list-group list-group-flush">
+                <li class="list-group-item text-muted text-center">Loading logs...</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -550,47 +551,7 @@
       </div>
     </div>
 
-    <!-- Analytics Tab -->
-    <div id="analyticsTab" class="section-content" style="display:none;">
-      <div class="row mb-4">
-        <div class="col-12">
-          <h3>Analytics & Reporting</h3>
-        </div>
-      </div>
 
-      <div class="row mb-4">
-        <div class="col-lg-6">
-          <div class="card ">
-            <div class="card-header  border-bottom">
-              <h5 class="mb-0">Traffic Patterns</h5>
-            </div>
-            <div class="card-body">
-              <canvas id="trafficPatternsChart"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="card ">
-            <div class="card-header  border-bottom">
-              <h5 class="mb-0">System Statistics</h5>
-            </div>
-            <div class="card-body">
-              <div class="list-group">
-                <div class="list-group-item">
-                  <strong>Total Traffic Monitoring Records:</strong> <span id="totalTrafficRecords">0</span>
-                </div>
-                <div class="list-group-item">
-                  <strong>Active Incidents:</strong> <span id="totalIncidents">0</span>
-                </div>
-                <div class="list-group-item">
-                  <strong>Total Feedback Submitted:</strong> <span id="totalFeedback">0</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Modals -->

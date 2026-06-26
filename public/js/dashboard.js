@@ -266,58 +266,109 @@ async function loadIncidents() {
  */
 async function initializeCharts() {
   try {
-    const response = await makeRequest('/traffic-monitoring/statistics?days=7');
-    const data = response?.success && Array.isArray(response.data) ? response.data : [];
-    const chartData = data.length > 0 ? data : [{ location_name: 'No data', avg_vehicles: 0, avg_speed: 0 }];
-    const labels = chartData.map(d => d.location_name || 'Unknown').slice(0, 6);
-    const vehicleData = chartData.map(d => Number(d.avg_vehicles || 0)).slice(0, 6);
-    const speedData = chartData.map(d => Number(d.avg_speed || 0)).slice(0, 6);
+    const [trafficRes, pedestrianRes, incidentRes, feedbackRes, airRes] = await Promise.all([
+      makeRequest('/traffic-lights'),
+      makeRequest('/pedestrians'),
+      makeRequest('/incidents?page=1&limit=100'),
+      makeRequest('/feedback'),
+      makeRequest('/air-quality/latest')
+    ]);
 
-    const ctx = document.getElementById('trafficChart');
-    if (ctx && trafficChart) {
-      trafficChart.destroy();
+    const counts = {
+      'Traffic Lights': trafficRes?.data?.length || 0,
+      'Pedestrians': pedestrianRes?.data?.length || 0,
+      'Incidents': (Array.isArray(incidentRes?.data) ? incidentRes.data : incidentRes?.data?.data || []).length,
+      'Feedbacks': (Array.isArray(feedbackRes?.data) ? feedbackRes.data : feedbackRes?.data?.data || []).length,
+      'Air Quality Stations': (Array.isArray(airRes?.data) ? airRes.data : airRes?.data?.data || []).length
+    };
+
+    const labels = Object.keys(counts);
+    const data = Object.values(counts);
+
+    const ctx = document.getElementById('analyticChart');
+    if (!ctx) return;
+    
+    if (window.analyticChart) {
+      window.analyticChart.destroy();
     }
 
-    if (ctx) {
-      trafficChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Average Vehicle Count',
-              data: vehicleData,
-              backgroundColor: '#28a745',
-              borderColor: '#20c997',
-              borderWidth: 2
-            },
-            {
-              label: 'Average Speed (km/h)',
-              data: speedData,
-              backgroundColor: '#17a2b8',
-              borderColor: '#138496',
-              borderWidth: 2
-            }
-          ]
+    window.analyticChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Total Records',
+          data,
+          backgroundColor: ['#00ffcc', '#f72585', '#4cc9f0', '#f8961e', '#9d4edd'],
+          borderWidth: 0,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              position: 'top'
-            },
-            title: {
-              display: false
-            }
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.1)' },
+            ticks: { color: '#fff', stepSize: 1 }
           },
-          scales: {
-            y: {
-              beginAtZero: true
-            }
+          x: {
+            grid: { display: false },
+            ticks: { color: '#fff' }
           }
         }
+      }
+    });
+
+    const logList = document.getElementById('systemLogList');
+    if (logList) {
+      let logs = [];
+      const feedbacks = Array.isArray(feedbackRes?.data) ? feedbackRes.data : feedbackRes?.data?.data || [];
+      const incidents = Array.isArray(incidentRes?.data) ? incidentRes.data : incidentRes?.data?.data || [];
+      
+      feedbacks.forEach(f => {
+        logs.push({
+          type: 'Feedback',
+          desc: `New ${f.type || 'feedback'}: ${f.category}`,
+          time: new Date(f.created_at).getTime()
+        });
       });
+      
+      incidents.forEach(i => {
+        logs.push({
+          type: 'Incident',
+          desc: `${i.severity} incident reported: ${i.title}`,
+          time: new Date(i.created_at).getTime()
+        });
+      });
+      
+      logs.sort((a, b) => b.time - a.time);
+      
+      if (logs.length === 0) {
+        logList.innerHTML = '<li class="list-group-item text-muted text-center">No recent activity</li>';
+      } else {
+        const timeAgo = (t) => {
+          const m = Math.floor((Date.now() - t) / 60000);
+          if (m < 60) return m + 'm ago';
+          const h = Math.floor(m / 60);
+          if (h < 24) return h + 'h ago';
+          return Math.floor(h / 24) + 'd ago';
+        };
+        
+        logList.innerHTML = logs.slice(0, 10).map(l => `
+          <li class="list-group-item bg-transparent text-white border-bottom border-secondary d-flex justify-content-between align-items-center" style="padding: 0.75rem 0;">
+            <div>
+              <span class="badge ${l.type==='Incident'?'bg-danger':'bg-info'} me-2">${l.type}</span>
+              ${l.desc}
+            </div>
+            <small class="text-muted text-nowrap ms-2">${timeAgo(l.time)}</small>
+          </li>
+        `).join('');
+      }
     }
   } catch (error) {
     console.error('Error initializing charts:', error);
@@ -1100,119 +1151,7 @@ function getPriorityColor(priority) {
   return colors[priority] || 'secondary';
 }
 
-/**
- * Load analytics data
- */
-async function loadAnalyticsData() {
-  try {
-    // Load traffic records count
-    const trafficResponse = await makeRequest('/traffic-monitoring/latest');
-    const trafficCount = trafficResponse?.data ? (Array.isArray(trafficResponse.data) ? trafficResponse.data.length : 1) : 0;
-    document.getElementById('totalTrafficRecords').textContent = trafficCount;
 
-    // Load incidents count
-    const incidentsResponse = await makeRequest('/incidents');
-    const incidents = Array.isArray(incidentsResponse?.data) ? incidentsResponse.data : incidentsResponse?.data?.data || [];
-    const activeIncidents = incidents.filter(i => i.status === 'pending' || i.status === 'processing').length;
-    document.getElementById('totalIncidents').textContent = activeIncidents;
-
-    // Load feedback count
-    const feedbackResponse = await makeRequest('/feedback');
-    const feedback = Array.isArray(feedbackResponse?.data) ? feedbackResponse.data : feedbackResponse?.data?.data || [];
-    document.getElementById('totalFeedback').textContent = feedback.length;
-
-    // Initialize traffic patterns chart
-    initializeTrafficPatternsChart();
-  } catch (error) {
-    console.error('Error loading analytics data:', error);
-  }
-}
-
-/**
- * Initialize traffic patterns chart
- */
-async function initializeTrafficPatternsChart() {
-  try {
-    const ctx = document.getElementById('trafficPatternsChart');
-    if (!ctx) return;
-
-    // Fetch actual data
-    const response = await makeRequest('/traffic-monitoring/pattern?days=7');
-    let chartData;
-
-    if (response?.success && response.data && response.data.length > 0) {
-      const data = response.data;
-      const labels = data.map(d => `${d.hour_of_day}:00`);
-      const vehicles = data.map(d => d.avg_vehicles);
-      const speeds = data.map(d => d.avg_speed);
-
-      chartData = {
-        labels: labels,
-        datasets: [
-          {
-            label: 'Average Vehicles',
-            data: vehicles,
-            borderColor: '#00ffcc',
-            backgroundColor: 'rgba(0, 255, 204, 0.1)',
-            borderWidth: 2,
-            tension: 0.4
-          },
-          {
-            label: 'Average Speed (km/h)',
-            data: speeds,
-            borderColor: '#f72585',
-            backgroundColor: 'rgba(247, 37, 133, 0.1)',
-            borderWidth: 2,
-            tension: 0.4
-          }
-        ]
-      };
-    } else {
-      // Fallback empty state
-      chartData = {
-        labels: ['00:00', '06:00', '12:00', '18:00'],
-        datasets: [{
-          label: 'No Data Available',
-          data: [0, 0, 0, 0],
-          borderColor: '#4c6ef5',
-          backgroundColor: 'rgba(76, 110, 245, 0.1)'
-        }]
-      };
-    }
-
-    // Destroy existing chart if it exists
-    if (window.trafficChartInstance) {
-      window.trafficChartInstance.destroy();
-    }
-
-    window.trafficChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: chartData,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-            labels: { color: '#fff' }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,0.1)' },
-            ticks: { color: '#fff' }
-          },
-          x: {
-            grid: { color: 'rgba(255,255,255,0.1)' },
-            ticks: { color: '#fff' }
-          }
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error initializing traffic patterns chart:', error);
-  }
-}
 
 async function viewFeedback(id) {
   try {
@@ -1371,8 +1310,7 @@ async function showTab(tabName) {
     } else if (tabName === 'feedback') {
       showSkeleton('feedbackTable', 5, 7);
       await loadCitizenFeedback();
-    } else if (tabName === 'analytics') {
-      await loadAnalyticsData();
+
     } else if (tabName === 'traffic-lights') {
       showSkeletonGrid('trafficLightsContainer', 4);
       await loadTrafficLightsManagement();
