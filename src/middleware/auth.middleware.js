@@ -1,37 +1,24 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const passport = require('../config/passport.config');
 
 /**
  * JWT Authentication Middleware
- * Melakukan verifikasi JWT token dari Authorization header
+ * Melakukan verifikasi JWT token dengan strategy passport-jwt
  */
 const authenticateJWT = (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
+  passport.authenticate('jwt', { session: false }, (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized: No token provided'
+        message: 'Unauthorized: Invalid or expired token'
       });
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.userId || decoded.sub || decoded.id;
-    req.user = {
-      ...decoded,
-      id: userId,
-      userId
-    };
+    req.user = user;
+    req.user.userId = user.id; // compatibility with controllers expecting req.user.userId
     next();
-  } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: 'Unauthorized: Invalid or expired token',
-      error: error.message
-    });
-  }
+  })(req, res, next);
 };
 
 /**

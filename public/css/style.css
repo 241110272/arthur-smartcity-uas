@@ -4,38 +4,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-:root, [data-theme="light"] {
-  /* Premium Light Slate Theme */
-  --bg-color: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-surface-hover: #f1f5f9;
-  --bg-navbar: rgba(255, 255, 255, 0.75);
-  --bg-input: #ffffff;
-  
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-color-focus: rgba(0, 0, 0, 0.16);
-  
-  --primary-accent: #2563eb; 
-  --primary-accent-hover: #1d4ed8;
-  
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #0ea5e9;
-  
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
-  
-  --radius-md: 10px;
-  --radius-lg: 14px;
-}
-
-[data-theme="dark"] {
-  /* Premium Dark Zinc/Stone Theme */
+:root {
+  /* Premium Dark Zinc/Stone Theme (Forced Dark Mode) */
   --bg-color: #0c0a09;
   --bg-surface: #1c1917;
   --bg-surface-hover: #292524;
@@ -48,12 +18,20 @@
   --primary-accent: #3b82f6;
   --primary-accent-hover: #2563eb;
   
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #0ea5e9;
+  
   --text-main: #fafaf9;
   --text-muted: #a8a29e;
   
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  
+  --radius-md: 10px;
+  --radius-lg: 14px;
 }
 
 * {
@@ -521,3 +499,10 @@ footer {
 .text-warning { color: var(--warning) !important; }
 .text-info { color: var(--info) !important; }
 .text-primary { color: var(--primary-accent) !important; }
+
+/* Input Group Text overrides for forced dark mode */
+.input-group-text {
+  background-color: var(--bg-surface-hover) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-muted) !important;
+}

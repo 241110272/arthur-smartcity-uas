@@ -1,37 +1,24 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const passport = require('../config/passport.config');
 
 /**
  * Authentication Middleware
- * Memverifikasi JWT token dari request
+ * Memverifikasi JWT token dari request dengan strategy passport-jwt
  */
 const authMiddleware = (req, res, next) => {
-  try {
-    // Get token dari header Authorization
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
+  passport.authenticate('jwt', { session: false }, (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Token tidak ditemukan'
+        message: 'Token tidak valid atau kadaluarsa'
       });
     }
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.userId || decoded.sub || decoded.id;
-    req.user = {
-      ...decoded,
-      id: userId,
-      userId
-    };
+    req.user = user;
+    req.user.userId = user.id; // compatibility with controllers expecting req.user.userId
     next();
-  } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: 'Token tidak valid atau kadaluarsa'
-    });
-  }
+  })(req, res, next);
 };
 
 /**
