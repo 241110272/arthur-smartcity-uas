@@ -18,10 +18,11 @@ const authenticateJWT = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId || decoded.sub || decoded.id;
     req.user = {
       ...decoded,
-      id: decoded.id || decoded.userId || decoded.sub,
-      userId: decoded.userId || decoded.sub || decoded.id
+      id: userId,
+      userId
     };
     next();
   } catch (error) {

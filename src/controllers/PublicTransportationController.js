@@ -35,7 +35,7 @@ class PublicTransportationController {
         current_location_lng: parseFloat(current_location_lng) || 0,
         occupancy_rate: parseInt(occupancy_rate) || 0,
         status: 'in_service',
-        operator_id: req.user.id
+        operator_id: req.user?.userId || req.user?.id || 1
       });
 
       res.status(201).json({
@@ -238,7 +238,7 @@ class PublicTransportationController {
         transport_id,
         issue_type,
         description || '',
-        req.user.id
+        req.user?.userId || req.user?.id || 1
       );
 
       res.status(201).json({

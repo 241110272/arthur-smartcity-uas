@@ -69,7 +69,7 @@ class IncidentController {
       }
 
       const result = await incidentModel.createReport({
-        user_id: req.user.userId,
+        user_id: req.user?.userId || req.user?.id || 1,
         title,
         description,
         incident_type,

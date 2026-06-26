@@ -60,7 +60,7 @@ class CitizenFeedbackController {
         location_name: locationName,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
-        submitted_by: req.user.id,
+        submitted_by: req.user?.userId || req.user?.id || 1,
         priority: priority || 'medium'
       });
 
@@ -236,7 +236,7 @@ class CitizenFeedbackController {
       const result = await feedbackModel.addAdminResponse(
         feedbackId,
         response_text,
-        req.user.id
+        req.user?.userId || req.user?.id || 1
       );
 
       res.status(201).json({

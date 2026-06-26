@@ -1148,8 +1148,10 @@ function bindNewFeatureForms() {
     emergencyAlertForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = {
-        type: document.getElementById('alertType').value,
-        location: document.getElementById('alertLocation').value,
+        alert_type: document.getElementById('alertType').value,
+        location_name: document.getElementById('alertLocation').value,
+        latitude: 0,
+        longitude: 0,
         severity: document.getElementById('alertSeverity').value,
         description: document.getElementById('alertDescription').value
       };
@@ -1177,9 +1179,11 @@ function bindNewFeatureForms() {
       e.preventDefault();
       const formData = {
         vehicle_type: document.getElementById('vehicleType').value,
-        route: document.getElementById('vehicleRoute').value,
-        capacity: parseInt(document.getElementById('vehicleCapacity').value),
-        last_location: document.getElementById('vehicleLocation').value
+        vehicle_number: `VEH-${Date.now()}`,
+        route_name: document.getElementById('vehicleRoute').value,
+        current_location_lat: 0,
+        current_location_lng: 0,
+        occupancy_rate: parseInt(document.getElementById('vehicleCapacity').value) || 0
       };
 
       const response = await makeRequest('/public-transportation/register', {
@@ -1207,7 +1211,8 @@ function bindNewFeatureForms() {
         type: document.getElementById('feedbackType').value,
         category: document.getElementById('feedbackCategory').value,
         message: document.getElementById('feedbackMessage').value,
-        location: document.getElementById('feedbackLocation').value || null
+        location: document.getElementById('feedbackLocation').value || null,
+        title: document.getElementById('feedbackMessage').value.slice(0, 80)
       };
 
       const response = await makeRequest('/feedback/submit', {

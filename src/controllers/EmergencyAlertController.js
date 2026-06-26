@@ -34,7 +34,7 @@ class EmergencyAlertController {
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
         description: description || '',
-        created_by: req.user.id
+        created_by: req.user?.userId || req.user?.id || 1
       });
 
       // Broadcast alert ke connected systems via Socket.IO
@@ -202,7 +202,7 @@ class EmergencyAlertController {
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
         description: `${vehicle_type.toUpperCase()} priority request: ${description || ''}`,
-        created_by: req.user.id
+        created_by: req.user?.userId || req.user?.id || 1
       });
 
       // Broadcast ke traffic management system untuk prioritize traffic lights
