@@ -9,9 +9,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="bg-light">
+<body>
   <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container-fluid">
       <a class="navbar-brand" href="/">
         <i class="fas fa-traffic-light"></i> Smart City Traffic
@@ -75,7 +75,7 @@
       <!-- Statistics Row -->
       <div class="row mb-4">
         <div class="col-md-3 mb-3">
-          <div class="card shadow-sm border-left-success">
+          <div class="card  border-left-success">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -89,7 +89,7 @@
         </div>
 
         <div class="col-md-3 mb-3">
-          <div class="card shadow-sm border-left-info">
+          <div class="card  border-left-info">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -103,7 +103,7 @@
         </div>
 
         <div class="col-md-3 mb-3">
-          <div class="card shadow-sm border-left-warning">
+          <div class="card  border-left-warning">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -117,7 +117,7 @@
         </div>
 
         <div class="col-md-3 mb-3">
-          <div class="card shadow-sm border-left-danger">
+          <div class="card  border-left-danger">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -134,8 +134,8 @@
       <!-- Traffic Status and Charts Row -->
       <div class="row mb-4">
         <div class="col-lg-8">
-          <div class="card shadow-sm">
-            <div class="card-header bg-white border-bottom">
+          <div class="card ">
+            <div class="card-header  border-bottom">
               <h5 class="mb-0">Traffic Conditions</h5>
             </div>
             <div class="card-body">
@@ -145,8 +145,8 @@
         </div>
 
         <div class="col-lg-4">
-          <div class="card shadow-sm">
-            <div class="card-header bg-white border-bottom">
+          <div class="card ">
+            <div class="card-header  border-bottom">
               <h5 class="mb-0">Traffic Lights Status</h5>
             </div>
             <div class="card-body" id="trafficLightsList" style="max-height: 400px; overflow-y: auto;">
@@ -159,15 +159,15 @@
       <!-- Recent Incidents -->
       <div class="row">
         <div class="col-12">
-          <div class="card shadow-sm">
-            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+          <div class="card ">
+            <div class="card-header  border-bottom d-flex justify-content-between align-items-center">
               <h5 class="mb-0">Recent Incidents</h5>
               <button class="btn btn-sm btn-primary" data-tab="incidents">View All</button>
             </div>
             <div class="card-body">
               <div id="recentIncidents" class="table-responsive">
                 <table class="table table-hover mb-0">
-                  <thead class="table-light">
+                  <thead class="">
                     <tr>
                       <th>Title</th>
                       <th>Type</th>
@@ -243,11 +243,11 @@
         </div>
       </div>
 
-      <div class="card shadow-sm">
+      <div class="card ">
         <div class="card-body">
           <div id="incidentsContainer" class="table-responsive">
             <table class="table table-hover">
-              <thead class="table-light">
+              <thead class="">
                 <tr>
                   <th>ID</th>
                   <th>Title</th>
@@ -278,11 +278,11 @@
         </div>
       </div>
 
-      <div class="card shadow-sm">
+      <div class="card ">
         <div class="card-body">
           <div id="usersContainer" class="table-responsive">
             <table class="table table-hover">
-              <thead class="table-light">
+              <thead class="">
                 <tr>
                   <th>ID</th>
                   <th>Username</th>
@@ -320,7 +320,7 @@
       <!-- Statistics Row -->
       <div class="row mb-4">
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-danger">
+          <div class="card  border-left-danger">
             <div class="card-body">
               <h6 class="text-muted">Active Alerts</h6>
               <h3 id="activeAlertsCount">0</h3>
@@ -328,7 +328,7 @@
           </div>
         </div>
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-warning">
+          <div class="card  border-left-warning">
             <div class="card-body">
               <h6 class="text-muted">Critical Alerts</h6>
               <h3 id="criticalAlertsCount">0</h3>
@@ -337,14 +337,14 @@
         </div>
       </div>
 
-      <div class="card shadow-sm">
-        <div class="card-header bg-white border-bottom">
+      <div class="card ">
+        <div class="card-header  border-bottom">
           <h5 class="mb-0">Active Alerts</h5>
         </div>
         <div class="card-body">
           <div id="emergencyAlertsContainer" class="table-responsive">
             <table class="table table-hover">
-              <thead class="table-light">
+              <thead class="">
                 <tr>
                   <th>ID</th>
                   <th>Type</th>
@@ -375,7 +375,7 @@
       <!-- Statistics Row -->
       <div class="row mb-4">
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-success">
+          <div class="card  border-left-success">
             <div class="card-body">
               <h6 class="text-muted">Good Quality</h6>
               <h3 id="goodAQCount">0</h3>
@@ -383,7 +383,7 @@
           </div>
         </div>
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-warning">
+          <div class="card  border-left-warning">
             <div class="card-body">
               <h6 class="text-muted">Moderate Quality</h6>
               <h3 id="moderateAQCount">0</h3>
@@ -391,7 +391,7 @@
           </div>
         </div>
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-danger">
+          <div class="card  border-left-danger">
             <div class="card-body">
               <h6 class="text-muted">Unhealthy Areas</h6>
               <h3 id="unhealthyAQCount">0</h3>
@@ -400,14 +400,14 @@
         </div>
       </div>
 
-      <div class="card shadow-sm">
-        <div class="card-header bg-white border-bottom">
+      <div class="card ">
+        <div class="card-header  border-bottom">
           <h5 class="mb-0">Air Quality Data</h5>
         </div>
         <div class="card-body">
           <div id="airQualityContainer" class="table-responsive">
             <table class="table table-hover">
-              <thead class="table-light">
+              <thead class="">
                 <tr>
                   <th>Location</th>
                   <th>AQI Index</th>
@@ -415,6 +415,7 @@
                   <th>PM10</th>
                   <th>Quality Level</th>
                   <th>Last Updated</th>
+                  <th id="aqActionHeader" style="display:none;">Actions</th>
                 </tr>
               </thead>
               <tbody id="airQualityTable">
@@ -442,7 +443,7 @@
       <!-- Statistics Row -->
       <div class="row mb-4">
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-info">
+          <div class="card  border-left-info">
             <div class="card-body">
               <h6 class="text-muted">Active Vehicles</h6>
               <h3 id="activeVehiclesCount">0</h3>
@@ -450,7 +451,7 @@
           </div>
         </div>
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-warning">
+          <div class="card  border-left-warning">
             <div class="card-body">
               <h6 class="text-muted">Issues Reported</h6>
               <h3 id="issuesCount">0</h3>
@@ -459,14 +460,14 @@
         </div>
       </div>
 
-      <div class="card shadow-sm">
-        <div class="card-header bg-white border-bottom">
+      <div class="card ">
+        <div class="card-header  border-bottom">
           <h5 class="mb-0">Active Vehicles</h5>
         </div>
         <div class="card-body">
           <div id="transportationContainer" class="table-responsive">
             <table class="table table-hover">
-              <thead class="table-light">
+              <thead class="">
                 <tr>
                   <th>Vehicle ID</th>
                   <th>Type</th>
@@ -501,7 +502,7 @@
       <!-- Statistics Row -->
       <div class="row mb-4">
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-info">
+          <div class="card  border-left-info">
             <div class="card-body">
               <h6 class="text-muted">Open Tickets</h6>
               <h3 id="openTicketsCount">0</h3>
@@ -509,7 +510,7 @@
           </div>
         </div>
         <div class="col-md-3">
-          <div class="card shadow-sm border-left-warning">
+          <div class="card  border-left-warning">
             <div class="card-body">
               <h6 class="text-muted">High Priority</h6>
               <h3 id="priorityFeedbackCount">0</h3>
@@ -518,14 +519,14 @@
         </div>
       </div>
 
-      <div class="card shadow-sm">
-        <div class="card-header bg-white border-bottom">
+      <div class="card ">
+        <div class="card-header  border-bottom">
           <h5 class="mb-0">All Feedback</h5>
         </div>
         <div class="card-body">
           <div id="feedbackContainer" class="table-responsive">
             <table class="table table-hover">
-              <thead class="table-light">
+              <thead class="">
                 <tr>
                   <th>ID</th>
                   <th>Type</th>
@@ -555,8 +556,8 @@
 
       <div class="row mb-4">
         <div class="col-lg-6">
-          <div class="card shadow-sm">
-            <div class="card-header bg-white border-bottom">
+          <div class="card ">
+            <div class="card-header  border-bottom">
               <h5 class="mb-0">Traffic Patterns</h5>
             </div>
             <div class="card-body">
@@ -565,8 +566,8 @@
           </div>
         </div>
         <div class="col-lg-6">
-          <div class="card shadow-sm">
-            <div class="card-header bg-white border-bottom">
+          <div class="card ">
+            <div class="card-header  border-bottom">
               <h5 class="mb-0">System Statistics</h5>
             </div>
             <div class="card-body">

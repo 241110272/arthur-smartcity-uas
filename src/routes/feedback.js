@@ -14,6 +14,7 @@ router.post('/submit', isUser, CitizenFeedbackController.submitFeedback);
 router.get('/category/:category', CitizenFeedbackController.getFeedbackByCategory);
 router.get('/location-stats', CitizenFeedbackController.getFeedbackByLocation);
 router.get('/user/:userId', CitizenFeedbackController.getUserFeedbackHistory);
+router.get('/:feedbackId', CitizenFeedbackController.getById);
 router.get('/:feedbackId/responses', CitizenFeedbackController.getFeedbackWithResponses);
 
 // Admin routes

@@ -50,6 +50,14 @@ class AirQualityMonitoring extends BaseModel {
   }
 
   /**
+   * Update existing air quality data
+   */
+  async updateAirQualityData(id, updateData) {
+    // Gunakan fungsi update() bawaan BaseModel
+    return await this.update(id, updateData);
+  }
+
+  /**
    * Get latest air quality for all locations
    */
   async getLatestAirQuality() {

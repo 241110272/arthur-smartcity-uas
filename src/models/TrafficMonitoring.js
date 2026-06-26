@@ -111,6 +111,24 @@ class TrafficMonitoring extends BaseModel {
     `;
     return await DatabaseUtil.executeSelect(query, [days]);
   }
+
+  /**
+   * Get traffic pattern trend by hour of day
+   */
+  async getTrafficPatternTrend(days = 7) {
+    const query = `
+      SELECT 
+        HOUR(recorded_at) as hour_of_day,
+        AVG(vehicle_count) as avg_vehicles,
+        AVG(average_speed) as avg_speed,
+        COUNT(*) as data_points
+      FROM ${this.tableName}
+      WHERE recorded_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+      GROUP BY HOUR(recorded_at)
+      ORDER BY hour_of_day ASC
+    `;
+    return await DatabaseUtil.executeSelect(query, [days]);
+  }
 }
 
 module.exports = TrafficMonitoring;

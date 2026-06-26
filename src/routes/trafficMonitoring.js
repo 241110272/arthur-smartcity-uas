@@ -13,6 +13,7 @@ router.get('/latest', isUser, TrafficMonitoringController.getLatestTraffic);
 router.get('/location/:location', isUser, TrafficMonitoringController.getTrafficByLocation);
 router.get('/congestion', isUser, TrafficMonitoringController.getHighCongestion);
 router.get('/statistics', isUser, TrafficMonitoringController.getStatistics);
+router.get('/pattern', isUser, TrafficMonitoringController.getPattern);
 
 // User routes - dapat merekam data
 router.post('/record', isUser, TrafficMonitoringController.recordTraffic);

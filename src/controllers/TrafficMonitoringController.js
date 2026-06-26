@@ -124,6 +124,23 @@ class TrafficMonitoringController {
   }
 
   /**
+   * Get traffic pattern (hourly trend)
+   */
+  static async getPattern(req, res, next) {
+    try {
+      const { days = 7 } = req.query;
+      const patternData = await trafficModel.getTrafficPatternTrend(parseInt(days));
+
+      res.json({
+        success: true,
+        data: patternData
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Generate traffic report (admin only)
    */
   static async generateReport(req, res, next) {

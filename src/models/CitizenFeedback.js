@@ -65,6 +65,22 @@ class CitizenFeedback extends BaseModel {
   }
 
   /**
+   * Get feedback by ID
+   */
+  async getFeedbackById(id) {
+    const query = `
+      SELECT 
+        cf.*,
+        u.username as submitted_by_name,
+        u.full_name
+      FROM ${this.tableName} cf
+      LEFT JOIN users u ON cf.submitted_by = u.id
+      WHERE cf.id = ?
+    `;
+    return await DatabaseUtil.executeSelectOne(query, [id]);
+  }
+
+  /**
    * Get feedback by category
    */
   async getFeedbackByCategory(category) {

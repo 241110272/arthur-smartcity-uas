@@ -62,6 +62,63 @@ class AirQualityController {
   }
 
   /**
+   * Update air quality data (Admin only)
+   */
+  static async updateAirQuality(req, res, next) {
+    try {
+      const { id } = req.params;
+      const {
+        aqi,
+        pm2_5,
+        pm10,
+        o3,
+        no2,
+        so2,
+        co,
+        quality_level
+      } = req.body;
+
+      if (aqi === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: 'Air quality index (AQI) harus diisi'
+        });
+      }
+
+      const updateData = {
+        aqi: parseInt(aqi),
+        quality_level: quality_level || 'Moderate'
+      };
+
+      if (pm2_5 !== undefined) updateData.pm2_5 = parseFloat(pm2_5) || null;
+      if (pm10 !== undefined) updateData.pm10 = parseFloat(pm10) || null;
+      if (o3 !== undefined) updateData.o3 = parseFloat(o3) || null;
+      if (no2 !== undefined) updateData.no2 = parseFloat(no2) || null;
+      if (so2 !== undefined) updateData.so2 = parseFloat(so2) || null;
+      if (co !== undefined) updateData.co = parseFloat(co) || null;
+
+      const updated = await airQualityModel.updateAirQualityData(id, updateData);
+      
+      if (!updated) {
+        return res.status(404).json({
+          success: false,
+          message: 'Data kualitas udara tidak ditemukan'
+        });
+      }
+
+      // Check alerts in background
+      airQualityModel.checkAndCreateAlerts().catch(console.error);
+
+      res.json({
+        success: true,
+        message: 'Data kualitas udara berhasil diperbarui'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get latest air quality data
    */
   static async getLatestAirQuality(req, res, next) {

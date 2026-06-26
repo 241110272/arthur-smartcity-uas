@@ -22,6 +22,30 @@ class CitizenFeedbackController {
   }
 
   /**
+   * Get feedback by ID
+   */
+  static async getById(req, res, next) {
+    try {
+      const { feedbackId } = req.params;
+      const feedback = await feedbackModel.getFeedbackById(feedbackId);
+
+      if (!feedback) {
+        return res.status(404).json({
+          success: false,
+          message: 'Feedback tidak ditemukan'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: feedback
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Submit feedback baru
    */
   static async submitFeedback(req, res, next) {

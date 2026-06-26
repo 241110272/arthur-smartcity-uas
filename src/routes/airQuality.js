@@ -20,6 +20,7 @@ router.post('/record', isUser, AirQualityController.recordAirQuality);
 // Admin routes
 router.get('/admin/correlation', isAdmin, AirQualityController.analyzeTrafficAirCorrelation);
 router.get('/admin/report', isAdmin, AirQualityController.generateReport);
+router.put('/admin/update/:id', isAdmin, AirQualityController.updateAirQuality);
 router.post('/admin/check-alerts', isAdmin, AirQualityController.checkAlerts);
 
 module.exports = router;

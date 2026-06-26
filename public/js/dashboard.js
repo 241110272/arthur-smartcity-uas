@@ -446,7 +446,12 @@ async function loadIncidentsManagement() {
           <td><span class="badge bg-${getSeverityColor(incident.severity)}">${incident.severity}</span></td>
           <td><span class="badge bg-${getIncidentStatusColor(incident.status)}">${incident.status}</span></td>
           <td>${formatDate(incident.created_at)}</td>
-          <td><button class="btn btn-sm btn-danger" onclick="deleteIncident(${incident.id})">Delete</button></td>
+          <td>
+            <div class="btn-group" role="group">
+              <button class="btn btn-sm btn-primary" onclick="viewIncident(${incident.id})">View</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteIncident(${incident.id})">Delete</button>
+            </div>
+          </td>
         </tr>
       `).join('');
 
@@ -727,7 +732,32 @@ async function viewIncident(id) {
     const response = await makeRequest(`/incidents/${id}`);
     if (response?.success && response.data) {
       const incident = response.data;
-      alert(`Incident:\nTitle: ${incident.title}\nType: ${incident.incident_type}\nSeverity: ${incident.severity}\nStatus: ${incident.status}\nLocation: ${incident.location}\nDescription: ${incident.description || '-'}\nCreated: ${formatDate(incident.created_at)}`);
+      const modalHtml = `
+        <div class="modal fade" id="dynamicIncidentModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content glass-card border-0 neon-border">
+              <div class="modal-header border-bottom border-light">
+                <h5 class="modal-title">Incident Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p><strong>Title:</strong> ${incident.title}</p>
+                <p><strong>Type:</strong> ${incident.incident_type}</p>
+                <p><strong>Severity:</strong> <span class="badge bg-${getSeverityColor(incident.severity)}">${incident.severity}</span></p>
+                <p><strong>Status:</strong> <span class="badge bg-${getIncidentStatusColor(incident.status)}">${incident.status}</span></p>
+                <p><strong>Location:</strong> ${incident.location}</p>
+                <p><strong>Description:</strong> ${incident.description || '-'}</p>
+                <p><strong>Created:</strong> ${formatDate(incident.created_at)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      const oldModal = document.getElementById('dynamicIncidentModal');
+      if (oldModal) oldModal.remove();
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      const modal = new bootstrap.Modal(document.getElementById('dynamicIncidentModal'));
+      modal.show();
     }
   } catch (error) {
     console.error('Error fetching incident:', error);
@@ -780,7 +810,31 @@ async function viewEmergencyAlert(id) {
     const response = await makeRequest(`/emergency-alerts/${id}`);
     if (response?.success && response.data) {
       const alertData = response.data;
-      window.alert(`Emergency Alert:\nType: ${alertData.alert_type}\nLocation: ${alertData.location_name}\nSeverity: ${alertData.severity}\nStatus: ${alertData.status}\nDescription: ${alertData.description || '-'}\nCreated: ${formatDate(alertData.created_at)}`);
+      const modalHtml = `
+        <div class="modal fade" id="dynamicAlertModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content glass-card border-0 neon-border-danger">
+              <div class="modal-header border-bottom border-light">
+                <h5 class="modal-title">Emergency Alert</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p><strong>Type:</strong> ${alertData.alert_type}</p>
+                <p><strong>Location:</strong> ${alertData.location_name}</p>
+                <p><strong>Severity:</strong> <span class="badge bg-${getSeverityColor(alertData.severity)}">${alertData.severity}</span></p>
+                <p><strong>Status:</strong> ${alertData.status}</p>
+                <p><strong>Description:</strong> ${alertData.description || '-'}</p>
+                <p><strong>Created:</strong> ${formatDate(alertData.created_at)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      const oldModal = document.getElementById('dynamicAlertModal');
+      if (oldModal) oldModal.remove();
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      const modal = new bootstrap.Modal(document.getElementById('dynamicAlertModal'));
+      modal.show();
     }
   } catch (error) {
     console.error('Error fetching alert:', error);
@@ -813,6 +867,10 @@ async function loadAirQualityData() {
       document.getElementById('moderateAQCount').textContent = moderateCount;
       document.getElementById('unhealthyAQCount').textContent = unhealthyCount;
 
+      const isAdmin = isAdminUser(currentUser);
+      const aqActionHeader = document.getElementById('aqActionHeader');
+      if (aqActionHeader) aqActionHeader.style.display = isAdmin ? 'table-cell' : 'none';
+
       // Build table
       const dataHTML = data.map(item => `
         <tr>
@@ -822,13 +880,48 @@ async function loadAirQualityData() {
           <td>${item.pm10 ?? '-'}</td>
           <td><span class="badge bg-${getQualityColor(item.quality_level)}">${item.quality_level}</span></td>
           <td>${item.recorded_at ? formatDate(item.recorded_at) : '-'}</td>
+          ${isAdmin ? `<td><button class="btn btn-sm btn-warning" onclick="editAirQuality(${item.id || 0}, '${item.location_name}', ${item.aqi})">Edit</button></td>` : ''}
         </tr>
       `).join('');
 
-      document.getElementById('airQualityTable').innerHTML = dataHTML || '<tr><td colspan="6" class="text-center text-muted">No data available</td></tr>';
+      document.getElementById('airQualityTable').innerHTML = dataHTML || '<tr><td colspan="7" class="text-center text-muted">No data available</td></tr>';
     }
   } catch (error) {
     console.error('Error loading air quality data:', error);
+  }
+}
+
+async function editAirQuality(id, locationName, currentAqi) {
+  if (!id) return showError('Invalid ID');
+  const newAqi = prompt(`Update AQI for ${locationName}\nCurrent AQI: ${currentAqi}\nNew AQI:`);
+  
+  if (newAqi === null || newAqi.trim() === '') return;
+  const aqiNum = parseInt(newAqi);
+  if (isNaN(aqiNum)) return showError('AQI must be a valid number');
+
+  let qualityLevel = 'Moderate';
+  if (aqiNum <= 50) qualityLevel = 'Good';
+  else if (aqiNum <= 100) qualityLevel = 'Moderate';
+  else if (aqiNum <= 150) qualityLevel = 'Unhealthy for Sensitive Groups';
+  else if (aqiNum <= 200) qualityLevel = 'Unhealthy';
+  else if (aqiNum <= 300) qualityLevel = 'Very Unhealthy';
+  else qualityLevel = 'Hazardous';
+
+  try {
+    const response = await makeRequest(`/air-quality/admin/update/${id}`, {
+      method: 'PUT',
+      body: { aqi: aqiNum, quality_level: qualityLevel }
+    });
+    
+    if (response?.success) {
+      showSuccess('Air quality updated successfully!');
+      await loadAirQualityData();
+    } else {
+      showError(response?.message || 'Failed to update air quality');
+    }
+  } catch (error) {
+    console.error('Error updating air quality:', error);
+    showError('Error updating air quality');
   }
 }
 
@@ -961,48 +1054,80 @@ async function loadAnalyticsData() {
 /**
  * Initialize traffic patterns chart
  */
-function initializeTrafficPatternsChart() {
+async function initializeTrafficPatternsChart() {
   try {
     const ctx = document.getElementById('trafficPatternsChart');
     if (!ctx) return;
 
-    // Sample data for demonstration
-    const chartData = {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      datasets: [
-        {
-          label: 'Morning Peak (7-9 AM)',
-          data: [65, 70, 68, 75, 80, 45, 40],
-          borderColor: '#ff6b6b',
-          backgroundColor: 'rgba(255, 107, 107, 0.1)',
-          borderWidth: 2,
-          tension: 0.4
-        },
-        {
-          label: 'Evening Peak (5-7 PM)',
-          data: [72, 78, 75, 82, 88, 55, 48],
-          borderColor: '#4c6ef5',
-          backgroundColor: 'rgba(76, 110, 245, 0.1)',
-          borderWidth: 2,
-          tension: 0.4
-        }
-      ]
-    };
+    // Fetch actual data
+    const response = await makeRequest('/traffic-monitoring/pattern?days=7');
+    let chartData;
 
-    new Chart(ctx, {
+    if (response?.success && response.data && response.data.length > 0) {
+      const data = response.data;
+      const labels = data.map(d => `${d.hour_of_day}:00`);
+      const vehicles = data.map(d => d.avg_vehicles);
+      const speeds = data.map(d => d.avg_speed);
+
+      chartData = {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Average Vehicles',
+            data: vehicles,
+            borderColor: '#00ffcc',
+            backgroundColor: 'rgba(0, 255, 204, 0.1)',
+            borderWidth: 2,
+            tension: 0.4
+          },
+          {
+            label: 'Average Speed (km/h)',
+            data: speeds,
+            borderColor: '#f72585',
+            backgroundColor: 'rgba(247, 37, 133, 0.1)',
+            borderWidth: 2,
+            tension: 0.4
+          }
+        ]
+      };
+    } else {
+      // Fallback empty state
+      chartData = {
+        labels: ['00:00', '06:00', '12:00', '18:00'],
+        datasets: [{
+          label: 'No Data Available',
+          data: [0, 0, 0, 0],
+          borderColor: '#4c6ef5',
+          backgroundColor: 'rgba(76, 110, 245, 0.1)'
+        }]
+      };
+    }
+
+    // Destroy existing chart if it exists
+    if (window.trafficChartInstance) {
+      window.trafficChartInstance.destroy();
+    }
+
+    window.trafficChartInstance = new Chart(ctx, {
       type: 'line',
       data: chartData,
       options: {
         responsive: true,
         plugins: {
           legend: {
-            position: 'top'
+            position: 'top',
+            labels: { color: '#fff' }
           }
         },
         scales: {
           y: {
             beginAtZero: true,
-            max: 100
+            grid: { color: 'rgba(255,255,255,0.1)' },
+            ticks: { color: '#fff' }
+          },
+          x: {
+            grid: { color: 'rgba(255,255,255,0.1)' },
+            ticks: { color: '#fff' }
           }
         }
       }
@@ -1017,7 +1142,31 @@ async function viewFeedback(id) {
     const response = await makeRequest(`/feedback/${id}`);
     if (response?.success && response.data) {
       const fb = response.data;
-      alert(`Citizen Feedback:\nType: ${fb.type}\nCategory: ${fb.category}\nStatus: ${fb.status}\nPriority: ${fb.priority}\nMessage: ${fb.message}\nCreated: ${formatDate(fb.created_at)}`);
+      const modalHtml = `
+        <div class="modal fade" id="dynamicFeedbackModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content glass-card border-0 neon-border-info">
+              <div class="modal-header border-bottom border-light">
+                <h5 class="modal-title">Citizen Feedback</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p><strong>Type:</strong> ${fb.type || fb.feedback_type}</p>
+                <p><strong>Category:</strong> ${fb.category}</p>
+                <p><strong>Status:</strong> ${fb.status}</p>
+                <p><strong>Priority:</strong> <span class="badge bg-${getPriorityColor(fb.priority)}">${fb.priority}</span></p>
+                <p><strong>Message:</strong> ${fb.message || fb.description}</p>
+                <p><strong>Created:</strong> ${formatDate(fb.created_at || fb.submitted_at)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      const oldModal = document.getElementById('dynamicFeedbackModal');
+      if (oldModal) oldModal.remove();
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      const modal = new bootstrap.Modal(document.getElementById('dynamicFeedbackModal'));
+      modal.show();
     }
   } catch (error) {
     console.error('Error fetching feedback:', error);
