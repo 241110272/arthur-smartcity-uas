@@ -160,16 +160,6 @@ async function loadCurrentUser() {
 
   if (currentUser) {
     document.getElementById('userName').textContent = currentUser.full_name || currentUser.username || 'User';
-    if (!isAdminUser(currentUser)) {
-      const adminDropdown = document.getElementById('adminDropdown');
-      if (adminDropdown) {
-        adminDropdown.closest('li').style.display = 'none';
-      }
-      const addTrafficLightBtn = document.getElementById('addTrafficLightBtn');
-      const addPedestrianBtn = document.getElementById('addPedestrianBtn');
-      if (addTrafficLightBtn) addTrafficLightBtn.style.display = 'none';
-      if (addPedestrianBtn) addPedestrianBtn.style.display = 'none';
-    }
   }
 }
 
@@ -1222,8 +1212,8 @@ async function viewFeedback(id) {
  * Handle Admin Menu Visibility
  */
 function handleAdminMenuVisibility() {
-  const adminMenuContainer = document.getElementById('adminMenuContainer');
   const userManagementBtn = document.getElementById('addTrafficLightBtn');
+  const addPedestrianBtn = document.getElementById('addPedestrianBtn');
   const createAlertBtn = document.getElementById('createAlertBtn');
   const registerTransportBtn = document.getElementById('registerTransportBtn');
   const reportIncidentBtn = document.getElementById('reportIncidentBtn');
@@ -1231,55 +1221,39 @@ function handleAdminMenuVisibility() {
   if (!currentUser) return;
 
   const role = currentUser.role;
+  const isAdminOrSuper = (role === 'admin' || role === 'superadmin');
 
-  // Handle Admin Menu visibility (Traffic Lights, Pedestrians, Incidents)
-  if (role === 'admin' || role === 'superadmin') {
-    if (adminMenuContainer) {
-      adminMenuContainer.style.display = 'block';
-    }
-    if (userManagementBtn) {
-      userManagementBtn.style.display = 'block';
-    }
-  } else {
-    if (adminMenuContainer) {
-      adminMenuContainer.style.display = 'none';
-    }
-    if (userManagementBtn) {
-      userManagementBtn.style.display = 'none';
-    }
+  // Handle Admin Only menu items visibility inside dropdown
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.setProperty('display', isAdminOrSuper ? 'block' : 'none', 'important');
+  });
+
+  // Handle Superadmin Only menu items visibility inside dropdown
+  document.querySelectorAll('.superadmin-only').forEach(el => {
+    el.style.setProperty('display', (role === 'superadmin') ? 'block' : 'none', 'important');
+  });
+
+  // Handle add buttons
+  if (userManagementBtn) {
+    userManagementBtn.style.setProperty('display', isAdminOrSuper ? 'block' : 'none', 'important');
   }
-
-  // Handle User Management access (Superadmin only)
-  const usersTab = document.querySelector('[data-tab="users"]');
-  if (usersTab) {
-    if (role === 'superadmin') {
-      usersTab.style.display = 'block';
-    } else {
-      usersTab.style.display = 'none';
-    }
+  if (addPedestrianBtn) {
+    addPedestrianBtn.style.setProperty('display', isAdminOrSuper ? 'block' : 'none', 'important');
   }
 
   // Handle Create Alert button (Admin and Superadmin)
   if (createAlertBtn) {
-    if (role === 'admin' || role === 'superadmin') {
-      createAlertBtn.style.display = 'block';
-    } else {
-      createAlertBtn.style.display = 'none';
-    }
+    createAlertBtn.style.setProperty('display', isAdminOrSuper ? 'block' : 'none', 'important');
   }
 
   // Handle Register Transport button (Admin and Superadmin)
   if (registerTransportBtn) {
-    if (role === 'admin' || role === 'superadmin') {
-      registerTransportBtn.style.display = 'block';
-    } else {
-      registerTransportBtn.style.display = 'none';
-    }
+    registerTransportBtn.style.setProperty('display', isAdminOrSuper ? 'block' : 'none', 'important');
   }
 
   // All users can report incidents and submit feedback
   if (reportIncidentBtn) {
-    reportIncidentBtn.style.display = 'block';
+    reportIncidentBtn.style.setProperty('display', 'block', 'important');
   }
 }
 
