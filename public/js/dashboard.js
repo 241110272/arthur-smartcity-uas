@@ -59,9 +59,50 @@ async function makeRequest(endpoint, options = {}) {
   return data;
 }
 
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) {
+    if (type === 'error') alert(message);
+    return;
+  }
+  
+  const toast = document.createElement('div');
+  toast.className = `custom-toast toast-${type}`;
+  
+  const iconMap = {
+    'success': '<i class="fas fa-check-circle toast-icon"></i>',
+    'error': '<i class="fas fa-exclamation-circle toast-icon"></i>',
+    'info': '<i class="fas fa-info-circle toast-icon"></i>'
+  };
+  
+  toast.innerHTML = `
+    ${iconMap[type] || iconMap['info']}
+    <div class="toast-content">${message}</div>
+    <button type="button" class="btn-close btn-close-white ms-auto" aria-label="Close"></button>
+  `;
+  
+  container.appendChild(toast);
+  
+  toast.querySelector('.btn-close').addEventListener('click', () => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  });
+  
+  setTimeout(() => toast.classList.add('show'), 10);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
 function showError(message) {
   console.error(message);
-  alert(message);
+  showToast(message, 'error');
+}
+
+function showSuccess(message) {
+  showToast(message, 'success');
 }
 
 function isAdminUser(user = currentUser) {
@@ -1252,12 +1293,16 @@ function setupTabNavigationUpdated() {
 }
 
 async function showTab(tabName) {
-  // Hide all tabs
+  // Hide all tabs with fade out
   document.querySelectorAll('.section-content').forEach(tab => {
-    tab.style.display = 'none';
+    tab.classList.remove('active');
+    setTimeout(() => {
+      if (!tab.classList.contains('active')) {
+        tab.style.display = 'none';
+      }
+    }, 300);
   });
 
-  // Map tab names to HTML element IDs (handle camelCase conversion)
   const tabIdMap = {
     'emergency-alerts': 'emergencyAlertsTab',
     'air-quality': 'airQualityTab',
@@ -1275,28 +1320,71 @@ async function showTab(tabName) {
   
   if (tabElement) {
     tabElement.style.display = 'block';
+    // Small timeout for CSS transition to trigger after display:block
+    setTimeout(() => tabElement.classList.add('active'), 10);
 
-    // Load data for the tab
     if (tabName === 'emergency-alerts') {
+      showSkeleton('emergencyAlertsTable', 5, 7);
       await loadEmergencyAlerts();
     } else if (tabName === 'air-quality') {
+      showSkeleton('airQualityTable', 5, 7);
       await loadAirQualityData();
     } else if (tabName === 'transportation') {
+      showSkeleton('transportationTable', 5, 7);
       await loadPublicTransportationData();
     } else if (tabName === 'feedback') {
+      showSkeleton('feedbackTable', 5, 7);
       await loadCitizenFeedback();
     } else if (tabName === 'analytics') {
       await loadAnalyticsData();
     } else if (tabName === 'traffic-lights') {
+      showSkeletonGrid('trafficLightsContainer', 4);
       await loadTrafficLightsManagement();
     } else if (tabName === 'pedestrians') {
+      showSkeletonGrid('pedestriansContainer', 4);
       await loadPedestriansManagement();
     } else if (tabName === 'incidents') {
+      showSkeleton('allIncidentsTable', 5, 8);
       await loadIncidentsManagement();
     } else if (tabName === 'users') {
+      showSkeleton('usersTable', 5, 7);
       await loadUsersManagement();
     }
   }
+}
+
+function showSkeleton(tableBodyId, rows = 3, cols = 5) {
+  const tbody = document.getElementById(tableBodyId);
+  if (!tbody) return;
+  let html = '';
+  for (let i = 0; i < rows; i++) {
+    html += '<tr>';
+    for (let j = 0; j < cols; j++) {
+      html += '<td><div class="skeleton-cell"></div></td>';
+    }
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function showSkeletonGrid(containerId, count = 4) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  let html = '';
+  for (let i = 0; i < count; i++) {
+    html += `
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="skeleton-cell mb-2" style="height:24px; width:60%;"></div>
+            <div class="skeleton-cell mb-3" style="height:16px; width:40%;"></div>
+            <div class="skeleton-cell mb-2" style="height:40px; width:100%;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  container.innerHTML = html;
 }
 
 /**
