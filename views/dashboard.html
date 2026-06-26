@@ -914,6 +914,9 @@
             <div class="text-end">
               <p class="text-muted mb-1">AQI Index</p>
               <h3 id="viewAqIndex" class="mb-0"></h3>
+              <div id="viewAqEditContainer" style="display:none; margin-top:5px;">
+                <input type="number" id="viewAqIndexInput" class="form-control text-end d-inline-block" style="width: 100px;">
+              </div>
             </div>
           </div>
           
@@ -954,6 +957,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="viewAqSaveBtn" style="display:none;">Save Changes</button>
         </div>
       </div>
     </div>

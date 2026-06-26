@@ -1003,8 +1003,7 @@ async function loadAirQualityData() {
           <td><span class="badge bg-${getQualityColor(item.quality_level)}">${item.quality_level}</span></td>
           <td>${item.recorded_at ? formatDate(item.recorded_at) : '-'}</td>
           <td>
-            <button class="btn btn-sm btn-info me-1" onclick="viewAirQuality(${item.id})">View</button>
-            ${isAdmin ? `<button class="btn btn-sm btn-warning" onclick="editAirQuality(${item.id}, '${item.location_name}', ${item.aqi})">Edit</button>` : ''}
+            <button class="btn btn-sm btn-info" onclick="viewAirQuality(${item.id})">View</button>
           </td>
         </tr>
       `).join('');
@@ -1034,42 +1033,57 @@ function viewAirQuality(id) {
   document.getElementById('viewAqCo').textContent = aq.co ?? '-';
   document.getElementById('viewAqRecordedAt').textContent = aq.recorded_at ? formatDate(aq.recorded_at) : '-';
   
+  const isAdmin = isAdminUser(currentUser);
+  const editContainer = document.getElementById('viewAqEditContainer');
+  const indexHeading = document.getElementById('viewAqIndex');
+  const saveBtn = document.getElementById('viewAqSaveBtn');
+  
+  if (isAdmin) {
+    indexHeading.style.display = 'none';
+    editContainer.style.display = 'block';
+    document.getElementById('viewAqIndexInput').value = aq.aqi;
+    saveBtn.style.display = 'inline-block';
+    
+    saveBtn.onclick = async () => {
+      const newAqi = parseInt(document.getElementById('viewAqIndexInput').value);
+      if (isNaN(newAqi)) return showError('AQI must be a valid number');
+      
+      let qualityLevel = 'Moderate';
+      if (newAqi <= 50) qualityLevel = 'Good';
+      else if (newAqi <= 100) qualityLevel = 'Moderate';
+      else if (newAqi <= 150) qualityLevel = 'Unhealthy for Sensitive Groups';
+      else if (newAqi <= 200) qualityLevel = 'Unhealthy';
+      else if (newAqi <= 300) qualityLevel = 'Very Unhealthy';
+      else qualityLevel = 'Hazardous';
+
+      try {
+        const response = await makeRequest(`/air-quality/admin/update/${aq.id}`, {
+          method: 'PUT',
+          body: { aqi: newAqi, quality_level: qualityLevel }
+        });
+        
+        if (response?.success) {
+          showSuccess('Air quality updated successfully!');
+          const modalEl = document.getElementById('viewAirQualityModal');
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) modalInstance.hide();
+          await loadAirQualityData();
+        } else {
+          showError(response?.message || 'Failed to update air quality');
+        }
+      } catch (error) {
+        console.error('Error updating air quality:', error);
+        showError('Error updating air quality');
+      }
+    };
+  } else {
+    indexHeading.style.display = 'block';
+    editContainer.style.display = 'none';
+    saveBtn.style.display = 'none';
+  }
+  
   const modal = new bootstrap.Modal(document.getElementById('viewAirQualityModal'));
   modal.show();
-}
-
-async function editAirQuality(id, locationName, currentAqi) {
-  if (!id) return showError('Invalid ID');
-  const newAqi = prompt(`Update AQI for ${locationName}\nCurrent AQI: ${currentAqi}\nNew AQI:`);
-  
-  if (newAqi === null || newAqi.trim() === '') return;
-  const aqiNum = parseInt(newAqi);
-  if (isNaN(aqiNum)) return showError('AQI must be a valid number');
-
-  let qualityLevel = 'Moderate';
-  if (aqiNum <= 50) qualityLevel = 'Good';
-  else if (aqiNum <= 100) qualityLevel = 'Moderate';
-  else if (aqiNum <= 150) qualityLevel = 'Unhealthy for Sensitive Groups';
-  else if (aqiNum <= 200) qualityLevel = 'Unhealthy';
-  else if (aqiNum <= 300) qualityLevel = 'Very Unhealthy';
-  else qualityLevel = 'Hazardous';
-
-  try {
-    const response = await makeRequest(`/air-quality/admin/update/${id}`, {
-      method: 'PUT',
-      body: { aqi: aqiNum, quality_level: qualityLevel }
-    });
-    
-    if (response?.success) {
-      showSuccess('Air quality updated successfully!');
-      await loadAirQualityData();
-    } else {
-      showError(response?.message || 'Failed to update air quality');
-    }
-  } catch (error) {
-    console.error('Error updating air quality:', error);
-    showError('Error updating air quality');
-  }
 }
 
 function getQualityColor(level) {
