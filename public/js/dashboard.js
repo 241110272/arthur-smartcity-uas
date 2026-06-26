@@ -221,59 +221,58 @@ async function loadIncidents() {
  */
 async function initializeCharts() {
   try {
-    const response = await makeRequest('/traffic-lights/current/conditions');
-    if (response?.success && Array.isArray(response.data)) {
-      const data = response.data;
-      const labels = data.map(d => d.intersection_name).slice(0, 6);
-      const vehicleData = data.map(d => d.vehicle_count).slice(0, 6);
-      const speedData = data.map(d => d.average_speed).slice(0, 6);
+    const response = await makeRequest('/traffic-monitoring/statistics?days=7');
+    const data = response?.success && Array.isArray(response.data) ? response.data : [];
+    const chartData = data.length > 0 ? data : [{ location_name: 'No data', avg_vehicles: 0, avg_speed: 0 }];
+    const labels = chartData.map(d => d.location_name || 'Unknown').slice(0, 6);
+    const vehicleData = chartData.map(d => Number(d.avg_vehicles || 0)).slice(0, 6);
+    const speedData = chartData.map(d => Number(d.avg_speed || 0)).slice(0, 6);
 
-      const ctx = document.getElementById('trafficChart');
-      if (ctx && trafficChart) {
-        trafficChart.destroy();
-      }
+    const ctx = document.getElementById('trafficChart');
+    if (ctx && trafficChart) {
+      trafficChart.destroy();
+    }
 
-      if (ctx) {
-        trafficChart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels,
-            datasets: [
-              {
-                label: 'Vehicle Count',
-                data: vehicleData,
-                backgroundColor: '#28a745',
-                borderColor: '#20c997',
-                borderWidth: 2
-              },
-              {
-                label: 'Avg Speed (km/h)',
-                data: speedData,
-                backgroundColor: '#17a2b8',
-                borderColor: '#138496',
-                borderWidth: 2
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-              legend: {
-                position: 'top'
-              },
-              title: {
-                display: false
-              }
+    if (ctx) {
+      trafficChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Average Vehicle Count',
+              data: vehicleData,
+              backgroundColor: '#28a745',
+              borderColor: '#20c997',
+              borderWidth: 2
             },
-            scales: {
-              y: {
-                beginAtZero: true
-              }
+            {
+              label: 'Average Speed (km/h)',
+              data: speedData,
+              backgroundColor: '#17a2b8',
+              borderColor: '#138496',
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'top'
+            },
+            title: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
             }
           }
-        });
-      }
+        }
+      });
     }
   } catch (error) {
     console.error('Error initializing charts:', error);

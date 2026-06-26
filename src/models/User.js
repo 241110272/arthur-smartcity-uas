@@ -1,5 +1,6 @@
 const BaseModel = require('./BaseModel');
 const bcrypt = require('bcryptjs');
+const pool = require('../utils/database');
 
 /**
  * User Model - Extends BaseModel dengan fitur authentication
@@ -35,7 +36,7 @@ class User extends BaseModel {
    * Find user by ID (untuk JWT authentication)
    */
   async findById(id) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT id, username, email, full_name, phone, role, created_at, updated_at FROM ${this.tableName} WHERE id = ?`,
@@ -51,7 +52,7 @@ class User extends BaseModel {
    * Find user berdasarkan email (async operation)
    */
   async findByEmail(email) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT * FROM ${this.tableName} WHERE email = ?`,
@@ -74,7 +75,7 @@ class User extends BaseModel {
    * Find user berdasarkan username
    */
   async findByUsername(username) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT * FROM ${this.tableName} WHERE username = ?`,
@@ -103,7 +104,7 @@ class User extends BaseModel {
    * Get all users dengan role tertentu
    */
   async getUsersByRole(role) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT id, username, email, full_name, phone, role, created_at FROM ${this.tableName} WHERE role = ? ORDER BY created_at DESC`,

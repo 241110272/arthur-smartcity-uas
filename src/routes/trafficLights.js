@@ -13,6 +13,11 @@ router.get('/', (req, res, next) => {
   TrafficLightController.getAll(req, res, next);
 });
 
+// GET - Get current traffic conditions
+router.get('/current/conditions', (req, res, next) => {
+  TrafficLightController.getCurrentConditions(req, res, next);
+});
+
 // GET - Get traffic light by ID
 router.get('/:id', (req, res, next) => {
   TrafficLightController.getById(req, res, next);
@@ -41,11 +46,6 @@ router.get('/:id/statistics', (req, res, next) => {
 // POST - Record traffic data
 router.post('/:id/record', authMiddleware, (req, res, next) => {
   TrafficLightController.recordData(req, res, next);
-});
-
-// GET - Get current traffic conditions
-router.get('/current/conditions', (req, res, next) => {
-  TrafficLightController.getCurrentConditions(req, res, next);
 });
 
 // GET - Get peak traffic times

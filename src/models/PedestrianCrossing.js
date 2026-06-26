@@ -1,4 +1,5 @@
 const BaseModel = require('./BaseModel');
+const pool = require('../utils/database');
 
 /**
  * PedestrianCrossing Model - Extends BaseModel
@@ -13,7 +14,7 @@ class PedestrianCrossing extends BaseModel {
    * Get all pedestrian crossings dengan status
    */
   async getAllWithStats() {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT pc.*, 
@@ -32,7 +33,7 @@ class PedestrianCrossing extends BaseModel {
    * Update crossing signal status (async operation)
    */
   async updateSignal(crossingId, signal, waitTime) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       await connection.execute(
         `UPDATE ${this.tableName} SET current_signal = ?, wait_time_estimate = ?, last_updated = NOW() WHERE id = ?`,
@@ -47,7 +48,7 @@ class PedestrianCrossing extends BaseModel {
    * Get crossing berdasarkan location
    */
   async getByLocation(locationName) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT * FROM ${this.tableName} WHERE location_name = ?`,
@@ -63,7 +64,7 @@ class PedestrianCrossing extends BaseModel {
    * Record pedestrian activity (async operation)
    */
   async recordPedestrianActivity(crossingId, count, waitTime) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       await connection.execute(
         `INSERT INTO pedestrian_activity (crossing_id, pedestrian_count, wait_time, created_at) 
@@ -79,7 +80,7 @@ class PedestrianCrossing extends BaseModel {
    * Get pedestrian statistics untuk crossing tertentu
    */
   async getPedestrianStats(crossingId, days = 7) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT DATE(created_at) as date, SUM(pedestrian_count) as total_count, AVG(wait_time) as avg_wait 

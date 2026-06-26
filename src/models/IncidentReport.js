@@ -1,4 +1,5 @@
 const BaseModel = require('./BaseModel');
+const pool = require('../utils/database');
 
 /**
  * Incident Report Model - Extends BaseModel
@@ -33,7 +34,7 @@ class IncidentReport extends BaseModel {
    * Get incidents dengan pagination (async operation)
    */
   async getIncidentsWithPagination(page = 1, limit = 10) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const offset = (page - 1) * limit;
       
@@ -77,7 +78,7 @@ class IncidentReport extends BaseModel {
    * Get incidents berdasarkan severity (async operation)
    */
   async getIncidentsBySeverity(severity) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT * FROM ${this.tableName} WHERE severity = ? ORDER BY created_at DESC`,
@@ -93,7 +94,7 @@ class IncidentReport extends BaseModel {
    * Get incidents berdasarkan type
    */
   async getIncidentsByType(incidentType) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT * FROM ${this.tableName} WHERE incident_type = ? ORDER BY created_at DESC`,

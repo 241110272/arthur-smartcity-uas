@@ -1,4 +1,5 @@
 const BaseModel = require('./BaseModel');
+const pool = require('../utils/database');
 
 /**
  * TrafficLight Model - Extends BaseModel
@@ -13,7 +14,7 @@ class TrafficLight extends BaseModel {
    * Get all traffic lights dengan status
    */
   async getAllWithStatus() {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT tl.*, 
@@ -31,7 +32,7 @@ class TrafficLight extends BaseModel {
    * Update traffic light status (async operation)
    */
   async updateStatus(trafficLightId, status, duration) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       await connection.execute(
         `UPDATE ${this.tableName} SET current_status = ?, status_duration = ?, last_updated = NOW() WHERE id = ?`,
@@ -46,7 +47,7 @@ class TrafficLight extends BaseModel {
    * Get traffic light berdasarkan intersection
    */
   async getByIntersection(intersectionName) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(
         `SELECT * FROM ${this.tableName} WHERE intersection_name = ?`,
@@ -62,7 +63,7 @@ class TrafficLight extends BaseModel {
    * Automate traffic light based on vehicle density (async operation)
    */
   async automateTrafficLight(trafficLightId) {
-    const connection = await require('../utils/database').getConnection();
+    const connection = await pool.getConnection();
     try {
       // Get current vehicle count for this traffic light
       const [data] = await connection.execute(
