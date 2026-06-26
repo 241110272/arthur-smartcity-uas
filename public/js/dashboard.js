@@ -122,7 +122,7 @@ function formatDate(dateString) {
 
 let trafficChart = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initDashboardApp() {
   if (!isAuthenticated()) {
     window.location.href = '/login';
     return;
@@ -130,7 +130,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await initializeDashboard();
   setupEventListeners();
-});
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  initDashboardApp();
+} else {
+  document.addEventListener('DOMContentLoaded', initDashboardApp);
+}
 
 /**
  * Initialize dashboard data
@@ -138,9 +144,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function initializeDashboard() {
   try {
     await loadCurrentUser();
-    await loadDashboardSummaries();
-    await initializeCharts();
+    // Bind modal forms first
     bindModalForms();
+    // Show the main tab immediately (which will trigger chart initialization)
+    await showTab('main');
+    // Load summary stats in the background without blocking the UI rendering
+    loadDashboardSummaries();
   } catch (error) {
     console.error('Error initializing dashboard:', error);
     showError('Gagal memuat data dashboard');
@@ -187,6 +196,7 @@ async function loadTrafficLights() {
     const response = await makeRequest('/traffic-lights');
     if (response?.success) {
       const data = response.data || [];
+      globalTrafficLightsData = data;
       document.getElementById('trafficLightCount').textContent = data.length;
 
       const listHTML = data.map(light => `
@@ -229,6 +239,7 @@ async function loadIncidents() {
     const response = await makeRequest('/incidents?page=1&limit=5');
     if (response?.success) {
       const incidents = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      globalIncidentsData = incidents;
       document.getElementById('incidentCount').textContent = incidents.length;
 
       const incidentsHTML = incidents.map(incident => `
@@ -476,6 +487,7 @@ async function loadTrafficLightsManagement() {
     const response = await makeRequest('/traffic-lights');
     if (response?.success) {
       const data = response.data || [];
+      globalTrafficLightsData = data;
       const html = data.map(light => `
         <div class="col-md-6 col-lg-4 mb-4">
           <div class="card h-100">
@@ -488,9 +500,8 @@ async function loadTrafficLightsManagement() {
               <p class="mb-3">
                 <small>Duration: ${light.status_duration}s</small>
               </p>
-              <div class="btn-group" role="group">
-                <button class="btn btn-sm btn-primary" onclick="updateTrafficLight(${light.id})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteTrafficLight(${light.id})">Delete</button>
+              <div>
+                <button class="btn btn-sm btn-info w-100" onclick="viewTrafficLight(${light.id})">View</button>
               </div>
             </div>
           </div>
@@ -512,6 +523,7 @@ async function loadPedestriansManagement() {
     const response = await makeRequest('/pedestrians');
     if (response?.success) {
       const data = response.data || [];
+      globalPedestriansData = data;
       const html = data.map(crossing => `
         <div class="col-md-6 col-lg-4 mb-4">
           <div class="card h-100">
@@ -524,9 +536,8 @@ async function loadPedestriansManagement() {
               <p class="mb-3">
                 <small>Wait Time: ${crossing.wait_time_estimate}s</small>
               </p>
-              <div class="btn-group" role="group">
-                <button class="btn btn-sm btn-primary" onclick="updatePedestrian(${crossing.id})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deletePedestrian(${crossing.id})">Delete</button>
+              <div>
+                <button class="btn btn-sm btn-info w-100" onclick="viewPedestrian(${crossing.id})">View</button>
               </div>
             </div>
           </div>
@@ -548,6 +559,7 @@ async function loadIncidentsManagement() {
     const response = await makeRequest('/incidents?page=1&limit=20');
     if (response?.success) {
       const incidents = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      globalIncidentsData = incidents;
       const html = incidents.map(incident => `
         <tr>
           <td>${incident.id}</td>
@@ -558,10 +570,7 @@ async function loadIncidentsManagement() {
           <td><span class="badge bg-${getIncidentStatusColor(incident.status)}">${incident.status}</span></td>
           <td>${formatDate(incident.created_at)}</td>
           <td>
-            <div class="btn-group" role="group">
-              <button class="btn btn-sm btn-primary" onclick="viewIncident(${incident.id})">View</button>
-              <button class="btn btn-sm btn-danger" onclick="deleteIncident(${incident.id})">Delete</button>
-            </div>
+            <button class="btn btn-sm btn-info" onclick="viewIncident(${incident.id})">View</button>
           </td>
         </tr>
       `).join('');
@@ -838,41 +847,96 @@ async function deleteIncident(id) {
   }
 }
 
-async function viewIncident(id) {
-  try {
-    const response = await makeRequest(`/incidents/${id}`);
-    if (response?.success && response.data) {
-      const incident = response.data;
-      const modalHtml = `
-        <div class="modal fade" id="dynamicIncidentModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content glass-card border-0 neon-border">
-              <div class="modal-header border-bottom border-light">
-                <h5 class="modal-title">Incident Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <p><strong>Title:</strong> ${incident.title}</p>
-                <p><strong>Type:</strong> ${incident.incident_type}</p>
-                <p><strong>Severity:</strong> <span class="badge bg-${getSeverityColor(incident.severity)}">${incident.severity}</span></p>
-                <p><strong>Status:</strong> <span class="badge bg-${getIncidentStatusColor(incident.status)}">${incident.status}</span></p>
-                <p><strong>Location:</strong> ${incident.location}</p>
-                <p><strong>Description:</strong> ${incident.description || '-'}</p>
-                <p><strong>Created:</strong> ${formatDate(incident.created_at)}</p>
-              </div>
+function viewIncident(id) {
+  const incident = globalIncidentsData.find(item => item.id == id);
+  if (!incident) return showError('Data not found');
+  
+  const isAdmin = isAdminUser(currentUser);
+  
+  const modalHtml = `
+    <div class="modal fade" id="dynamicIncidentModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content glass-card border-0">
+          <div class="modal-header border-bottom border-light">
+            <h5 class="modal-title">Incident Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <h4 class="mb-3">${incident.title}</h4>
+            <p><strong>Type:</strong> ${incident.incident_type}</p>
+            <p><strong>Location:</strong> ${incident.location}</p>
+            <p><strong>Severity:</strong> <span class="badge bg-${getSeverityColor(incident.severity)}">${incident.severity}</span></p>
+            <p><strong>Description:</strong> ${incident.description || '-'}</p>
+            <p><strong>Created At:</strong> ${formatDate(incident.created_at)}</p>
+            
+            <div class="mt-4">
+              <label class="form-label">Incident Status</label>
+              ${isAdmin ? `
+                <select id="editIncidentStatus" class="form-select">
+                  <option value="pending" ${incident.status === 'pending' ? 'selected' : ''}>Pending</option>
+                  <option value="processing" ${incident.status === 'processing' ? 'selected' : ''}>Processing</option>
+                  <option value="resolved" ${incident.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                  <option value="closed" ${incident.status === 'closed' ? 'selected' : ''}>Closed</option>
+                </select>
+              ` : `
+                <h5><span class="badge bg-${getIncidentStatusColor(incident.status)}">${incident.status}</span></h5>
+              `}
+            </div>
+            
+            <div class="mt-3">
+              <label class="form-label">Admin Notes</label>
+              ${isAdmin ? `
+                <textarea id="editIncidentNotes" class="form-control" rows="3">${incident.admin_notes || ''}</textarea>
+              ` : `
+                <p class="p-2 bg-dark rounded text-light">${incident.admin_notes || 'No admin notes'}</p>
+              `}
             </div>
           </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            ${isAdmin ? `
+              <button type="button" class="btn btn-danger me-auto" id="editIncidentDeleteBtn">Delete</button>
+              <button type="button" class="btn btn-primary" id="editIncidentSaveBtn">Save Changes</button>
+            ` : ''}
+          </div>
         </div>
-      `;
-      const oldModal = document.getElementById('dynamicIncidentModal');
-      if (oldModal) oldModal.remove();
-      document.body.insertAdjacentHTML('beforeend', modalHtml);
-      const modal = new bootstrap.Modal(document.getElementById('dynamicIncidentModal'));
-      modal.show();
-    }
-  } catch (error) {
-    console.error('Error fetching incident:', error);
-    showError('Gagal memuat detail incident.');
+      </div>
+    </div>
+  `;
+  
+  const oldModal = document.getElementById('dynamicIncidentModal');
+  if (oldModal) oldModal.remove();
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  const modal = new bootstrap.Modal(document.getElementById('dynamicIncidentModal'));
+  modal.show();
+  
+  if (isAdmin) {
+    document.getElementById('editIncidentDeleteBtn').onclick = async () => {
+      modal.hide();
+      await deleteIncident(incident.id);
+    };
+    document.getElementById('editIncidentSaveBtn').onclick = async () => {
+      const status = document.getElementById('editIncidentStatus').value;
+      const notes = document.getElementById('editIncidentNotes').value.trim();
+      
+      try {
+        const response = await makeRequest(`/incidents/${incident.id}/status`, {
+          method: 'PUT',
+          body: { status, notes }
+        });
+        if (response?.success) {
+          showSuccess('Incident updated successfully!');
+          modal.hide();
+          await loadIncidents();
+          await loadIncidentsManagement();
+        } else {
+          showError(response.message || 'Failed to update incident');
+        }
+      } catch (error) {
+        showError('Error updating incident');
+      }
+    };
   }
 }
 
@@ -888,6 +952,7 @@ async function loadEmergencyAlerts() {
     const response = await makeRequest('/emergency-alerts/active');
     if (response?.success) {
       const alerts = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      globalEmergencyAlertsData = alerts;
       
       // Update counts
       document.getElementById('activeAlertsCount').textContent = alerts.length;
@@ -904,7 +969,7 @@ async function loadEmergencyAlerts() {
           <td><span class="badge bg-info">${alert.status}</span></td>
           <td>${formatDate(alert.created_at)}</td>
           <td>
-            <button class="btn btn-sm btn-primary" onclick="viewEmergencyAlert(${alert.id})">View</button>
+            <button class="btn btn-sm btn-info" onclick="viewEmergencyAlert(${alert.id})">View</button>
           </td>
         </tr>
       `).join('');
@@ -916,43 +981,89 @@ async function loadEmergencyAlerts() {
   }
 }
 
-async function viewEmergencyAlert(id) {
-  try {
-    const response = await makeRequest(`/emergency-alerts/${id}`);
-    if (response?.success && response.data) {
-      const alertData = response.data;
-      const modalHtml = `
-        <div class="modal fade" id="dynamicAlertModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content glass-card border-0 neon-border-danger">
-              <div class="modal-header border-bottom border-light">
-                <h5 class="modal-title">Emergency Alert</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <p><strong>Type:</strong> ${alertData.alert_type}</p>
-                <p><strong>Location:</strong> ${alertData.location_name}</p>
-                <p><strong>Severity:</strong> <span class="badge bg-${getSeverityColor(alertData.severity)}">${alertData.severity}</span></p>
-                <p><strong>Status:</strong> ${alertData.status}</p>
-                <p><strong>Description:</strong> ${alertData.description || '-'}</p>
-                <p><strong>Created:</strong> ${formatDate(alertData.created_at)}</p>
-              </div>
+function viewEmergencyAlert(id) {
+  const alertData = globalEmergencyAlertsData.find(item => item.id == id);
+  if (!alertData) return showError('Data not found');
+  
+  const isAdmin = isAdminUser(currentUser);
+  
+  const modalHtml = `
+    <div class="modal fade" id="dynamicAlertModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content glass-card border-0">
+          <div class="modal-header border-bottom border-light">
+            <h5 class="modal-title">Emergency Alert Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Type:</strong> <span class="badge bg-secondary">${alertData.type || alertData.alert_type}</span></p>
+            <p><strong>Location:</strong> ${alertData.location || alertData.location_name}</p>
+            <p><strong>Severity:</strong> <span class="badge bg-${getSeverityColor(alertData.severity)}">${alertData.severity}</span></p>
+            <p><strong>Description:</strong> ${alertData.description || '-'}</p>
+            <p><strong>Created At:</strong> ${formatDate(alertData.created_at)}</p>
+            
+            <div class="mt-4">
+              <label class="form-label">Alert Status</label>
+              ${isAdmin ? `
+                <select id="editAlertStatus" class="form-select">
+                  <option value="active" ${alertData.status === 'active' ? 'selected' : ''}>Active</option>
+                  <option value="resolved" ${alertData.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                  <option value="cancelled" ${alertData.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+              ` : `
+                <h5><span class="badge bg-info">${alertData.status}</span></h5>
+              `}
             </div>
           </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            ${isAdmin ? `
+              <button type="button" class="btn btn-primary" id="editAlertSaveBtn">Save Changes</button>
+            ` : ''}
+          </div>
         </div>
-      `;
-      const oldModal = document.getElementById('dynamicAlertModal');
-      if (oldModal) oldModal.remove();
-      document.body.insertAdjacentHTML('beforeend', modalHtml);
-      const modal = new bootstrap.Modal(document.getElementById('dynamicAlertModal'));
-      modal.show();
-    }
-  } catch (error) {
-    console.error('Error fetching alert:', error);
+      </div>
+    </div>
+  `;
+  
+  const oldModal = document.getElementById('dynamicAlertModal');
+  if (oldModal) oldModal.remove();
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  const modal = new bootstrap.Modal(document.getElementById('dynamicAlertModal'));
+  modal.show();
+  
+  if (isAdmin) {
+    document.getElementById('editAlertSaveBtn').onclick = async () => {
+      const status = document.getElementById('editAlertStatus').value;
+      if (!status) return showError('Invalid input');
+      
+      try {
+        const response = await makeRequest(`/emergency-alerts/${alertData.id}/status`, {
+          method: 'PUT',
+          body: { status }
+        });
+        if (response?.success) {
+          showSuccess('Emergency alert updated successfully!');
+          modal.hide();
+          await loadEmergencyAlerts();
+        } else {
+          showError(response.message || 'Gagal memperbarui alert');
+        }
+      } catch (error) {
+        showError('Terjadi kesalahan saat memperbarui alert.');
+      }
+    };
   }
 }
 
 let globalAirQualityData = [];
+let globalTrafficLightsData = [];
+let globalPedestriansData = [];
+let globalEmergencyAlertsData = [];
+let globalVehiclesData = [];
+let globalFeedbackData = [];
+let globalIncidentsData = [];
 
 /**
  * Load Air Quality Data
@@ -1051,7 +1162,6 @@ function viewAirQuality(id) {
       let qualityLevel = 'Moderate';
       if (newAqi <= 50) qualityLevel = 'Good';
       else if (newAqi <= 100) qualityLevel = 'Moderate';
-      else if (newAqi <= 150) qualityLevel = 'Unhealthy for Sensitive Groups';
       else if (newAqi <= 200) qualityLevel = 'Unhealthy';
       else if (newAqi <= 300) qualityLevel = 'Very Unhealthy';
       else qualityLevel = 'Hazardous';
@@ -1090,7 +1200,6 @@ function getQualityColor(level) {
   const colors = {
     'Good': 'success',
     'Moderate': 'warning',
-    'Unhealthy for Sensitive Groups': 'warning',
     'Unhealthy': 'danger',
     'Very Unhealthy': 'dark',
     'Hazardous': 'dark'
@@ -1106,6 +1215,7 @@ async function loadPublicTransportationData() {
     const response = await makeRequest('/public-transportation/active');
     if (response?.success) {
       const vehicles = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      globalVehiclesData = vehicles;
       
       // Update counts
       document.getElementById('activeVehiclesCount').textContent = vehicles.length;
@@ -1120,16 +1230,19 @@ async function loadPublicTransportationData() {
       // Build table
       const vehiclesHTML = vehicles.map(vehicle => `
         <tr>
-          <td>${vehicle.vehicle_id}</td>
+          <td>${vehicle.vehicle_number}</td>
           <td><span class="badge bg-info">${vehicle.vehicle_type}</span></td>
-          <td>${vehicle.route}</td>
+          <td>${vehicle.route_name}</td>
           <td>${vehicle.occupancy_rate || 0}%</td>
           <td><span class="badge bg-success">${vehicle.status}</span></td>
-          <td>${vehicle.last_location}</td>
+          <td>${vehicle.current_location_lat || 0}, ${vehicle.current_location_lng || 0}</td>
+          <td>
+            <button class="btn btn-sm btn-info" onclick="viewPublicTransportation(${vehicle.id})">View</button>
+          </td>
         </tr>
       `).join('');
 
-      document.getElementById('transportationTable').innerHTML = vehiclesHTML || '<tr><td colspan="6" class="text-center text-muted">No vehicles</td></tr>';
+      document.getElementById('transportationTable').innerHTML = vehiclesHTML || '<tr><td colspan="7" class="text-center text-muted">No vehicles</td></tr>';
     }
   } catch (error) {
     console.error('Error loading transportation data:', error);
@@ -1144,6 +1257,7 @@ async function loadCitizenFeedback() {
     const response = await makeRequest('/feedback');
     if (response?.success) {
       const feedback = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      globalFeedbackData = feedback;
       
       // Update counts
       const openCount = feedback.filter(f => f.status === 'open').length;
@@ -1162,7 +1276,7 @@ async function loadCitizenFeedback() {
           <td><span class="badge bg-${getPriorityColor(item.priority)}">${item.priority}</span></td>
           <td>${formatDate(item.created_at)}</td>
           <td>
-            <button class="btn btn-sm btn-primary" onclick="viewFeedback(${item.id})">View</button>
+            <button class="btn btn-sm btn-info" onclick="viewFeedback(${item.id})">View</button>
           </td>
         </tr>
       `).join('');
@@ -1184,41 +1298,419 @@ function getPriorityColor(priority) {
   return colors[priority] || 'secondary';
 }
 
+function viewTrafficLight(id) {
+  const light = globalTrafficLightsData.find(item => item.id == id);
+  if (!light) return showError('Data not found');
+  
+  const isAdmin = isAdminUser(currentUser);
+  
+  const modalHtml = `
+    <div class="modal fade" id="dynamicTrafficLightModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content border-0">
+          <div class="modal-header">
+            <h5 class="modal-title">Traffic Light Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <h4 class="mb-3">${light.intersection_name}</h4>
+            <p><strong>Location:</strong> ${light.location}</p>
+            <p><strong>Coordinates:</strong> ${light.latitude || 0}, ${light.longitude || 0}</p>
+            
+            <div class="mt-4">
+              <label class="form-label">Current Status</label>
+              ${isAdmin ? `
+                <select id="editTrafficLightStatus" class="form-select">
+                  <option value="red" ${light.current_status === 'red' ? 'selected' : ''}>Red</option>
+                  <option value="yellow" ${light.current_status === 'yellow' ? 'selected' : ''}>Yellow</option>
+                  <option value="green" ${light.current_status === 'green' ? 'selected' : ''}>Green</option>
+                </select>
+              ` : `
+                <h5><span class="badge bg-${getStatusColor(light.current_status)}">${light.current_status}</span></h5>
+              `}
+            </div>
+            
+            <div class="mt-3">
+              <label class="form-label">Status Duration (seconds)</label>
+              ${isAdmin ? `
+                <input type="number" id="editTrafficLightDuration" class="form-control" value="${light.status_duration}" min="1">
+              ` : `
+                <p class="p-2 bg-dark rounded text-light">${light.status_duration} seconds</p>
+              `}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            ${isAdmin ? `
+              <button type="button" class="btn btn-danger me-auto" id="editTrafficLightDeleteBtn">Delete</button>
+              <button type="button" class="btn btn-primary" id="editTrafficLightSaveBtn">Save Changes</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const oldModal = document.getElementById('dynamicTrafficLightModal');
+  if (oldModal) oldModal.remove();
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  const modal = new bootstrap.Modal(document.getElementById('dynamicTrafficLightModal'));
+  modal.show();
+  
+  if (isAdmin) {
+    document.getElementById('editTrafficLightDeleteBtn').onclick = async () => {
+      modal.hide();
+      await deleteTrafficLight(light.id);
+    };
+    
+    document.getElementById('editTrafficLightSaveBtn').onclick = async () => {
+      const status = document.getElementById('editTrafficLightStatus').value;
+      const duration = parseInt(document.getElementById('editTrafficLightDuration').value) || 30;
+      
+      try {
+        const response = await makeRequest(`/traffic-lights/${light.id}/status`, {
+          method: 'PUT',
+          body: { status, duration }
+        });
+        if (response?.success) {
+          showSuccess('Traffic light updated successfully!');
+          modal.hide();
+          await loadTrafficLights();
+          await loadTrafficLightsManagement();
+        } else {
+          showError(response.message || 'Failed to update traffic light');
+        }
+      } catch (error) {
+        showError('Error updating traffic light');
+      }
+    };
+  }
+}
 
+function viewPedestrian(id) {
+  const crossing = globalPedestriansData.find(item => item.id == id);
+  if (!crossing) return showError('Data not found');
+  
+  const isAdmin = isAdminUser(currentUser);
+  
+  const modalHtml = `
+    <div class="modal fade" id="dynamicPedestrianModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content border-0">
+          <div class="modal-header">
+            <h5 class="modal-title">Pedestrian Crossing Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <h4 class="mb-3">${crossing.location_name}</h4>
+            <p><strong>Street Name:</strong> ${crossing.street_name}</p>
+            <p><strong>Coordinates:</strong> ${crossing.latitude || 0}, ${crossing.longitude || 0}</p>
+            
+            <div class="mt-4">
+              <label class="form-label">Current Signal</label>
+              ${isAdmin ? `
+                <select id="editPedestrianSignal" class="form-select">
+                  <option value="wait" ${crossing.current_signal === 'wait' ? 'selected' : ''}>Wait</option>
+                  <option value="walk" ${crossing.current_signal === 'walk' ? 'selected' : ''}>Walk</option>
+                </select>
+              ` : `
+                <h5><span class="badge bg-${crossing.current_signal === 'walk' ? 'success' : 'danger'}">${crossing.current_signal}</span></h5>
+              `}
+            </div>
+            
+            <div class="mt-3">
+              <label class="form-label">Wait Time Estimate (seconds)</label>
+              ${isAdmin ? `
+                <input type="number" id="editPedestrianWaitTime" class="form-control" value="${crossing.wait_time_estimate}" min="0">
+              ` : `
+                <p class="p-2 bg-dark rounded text-light">${crossing.wait_time_estimate} seconds</p>
+              `}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            ${isAdmin ? `
+              <button type="button" class="btn btn-danger me-auto" id="editPedestrianDeleteBtn">Delete</button>
+              <button type="button" class="btn btn-primary" id="editPedestrianSaveBtn">Save Changes</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const oldModal = document.getElementById('dynamicPedestrianModal');
+  if (oldModal) oldModal.remove();
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  const modal = new bootstrap.Modal(document.getElementById('dynamicPedestrianModal'));
+  modal.show();
+  
+  if (isAdmin) {
+    document.getElementById('editPedestrianDeleteBtn').onclick = async () => {
+      modal.hide();
+      await deletePedestrian(crossing.id);
+    };
+    
+    document.getElementById('editPedestrianSaveBtn').onclick = async () => {
+      const signal = document.getElementById('editPedestrianSignal').value;
+      const waitTime = parseInt(document.getElementById('editPedestrianWaitTime').value) || 0;
+      
+      try {
+        const response = await makeRequest(`/pedestrians/${crossing.id}/signal`, {
+          method: 'PUT',
+          body: { signal, waitTime }
+        });
+        if (response?.success) {
+          showSuccess('Pedestrian crossing updated successfully!');
+          modal.hide();
+          await loadPedestrianCrossings();
+          await loadPedestriansManagement();
+        } else {
+          showError(response.message || 'Failed to update pedestrian crossing');
+        }
+      } catch (error) {
+        showError('Error updating pedestrian crossing');
+      }
+    };
+  }
+}
 
-async function viewFeedback(id) {
+function viewPublicTransportation(id) {
+  const vehicle = globalVehiclesData.find(item => item.id == id);
+  if (!vehicle) return showError('Data not found');
+  
+  const isAdmin = isAdminUser(currentUser);
+  
+  const modalHtml = `
+    <div class="modal fade" id="dynamicTransportModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content border-0">
+          <div class="modal-header">
+            <h5 class="modal-title">Transportation Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <h4 class="mb-3">${vehicle.vehicle_number}</h4>
+            <p><strong>Coordinates:</strong> ${vehicle.current_location_lat || 0}, ${vehicle.current_location_lng || 0}</p>
+            
+            <div class="mt-4">
+              <label class="form-label">Vehicle Type</label>
+              ${isAdmin ? `
+                <select id="editTransportType" class="form-select">
+                  <option value="bus" ${vehicle.vehicle_type === 'bus' ? 'selected' : ''}>Bus</option>
+                  <option value="mrt" ${vehicle.vehicle_type === 'mrt' ? 'selected' : ''}>MRT</option>
+                  <option value="lrt" ${vehicle.vehicle_type === 'lrt' ? 'selected' : ''}>LRT</option>
+                  <option value="minibus" ${vehicle.vehicle_type === 'minibus' ? 'selected' : ''}>Minibus</option>
+                  <option value="tram" ${vehicle.vehicle_type === 'tram' ? 'selected' : ''}>Tram</option>
+                  <option value="taxi" ${vehicle.vehicle_type === 'taxi' ? 'selected' : ''}>Taxi</option>
+                </select>
+              ` : `
+                <h5><span class="badge bg-info">${vehicle.vehicle_type}</span></h5>
+              `}
+            </div>
+            
+            <div class="mt-3">
+              <label class="form-label">Route</label>
+              ${isAdmin ? `
+                <input type="text" id="editTransportRoute" class="form-control" value="${vehicle.route_name || ''}">
+              ` : `
+                <p class="p-2 bg-dark rounded text-light">${vehicle.route_name || '-'}</p>
+              `}
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Occupancy Rate (%)</label>
+              ${isAdmin ? `
+                <input type="number" id="editTransportOccupancy" class="form-control" value="${vehicle.occupancy_rate || 0}" min="0" max="100">
+              ` : `
+                <p class="p-2 bg-dark rounded text-light">${vehicle.occupancy_rate || 0}%</p>
+              `}
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Status</label>
+              ${isAdmin ? `
+                <select id="editTransportStatus" class="form-select">
+                  <option value="in_service" ${vehicle.status === 'in_service' ? 'selected' : ''}>In Service</option>
+                  <option value="maintenance" ${vehicle.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                  <option value="waiting" ${vehicle.status === 'waiting' ? 'selected' : ''}>Waiting</option>
+                </select>
+              ` : `
+                <h5><span class="badge bg-success">${vehicle.status}</span></h5>
+              `}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            ${isAdmin ? `
+              <button type="button" class="btn btn-danger me-auto" id="editTransportDeleteBtn">Delete</button>
+              <button type="button" class="btn btn-primary" id="editTransportSaveBtn">Save Changes</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const oldModal = document.getElementById('dynamicTransportModal');
+  if (oldModal) oldModal.remove();
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  const modal = new bootstrap.Modal(document.getElementById('dynamicTransportModal'));
+  modal.show();
+  
+  if (isAdmin) {
+    document.getElementById('editTransportDeleteBtn').onclick = async () => {
+      modal.hide();
+      await deletePublicTransportation(vehicle.id);
+    };
+    
+    document.getElementById('editTransportSaveBtn').onclick = async () => {
+      const vehicle_type = document.getElementById('editTransportType').value;
+      const route_name = document.getElementById('editTransportRoute').value.trim();
+      const occupancy_rate = parseInt(document.getElementById('editTransportOccupancy').value) || 0;
+      const status = document.getElementById('editTransportStatus').value;
+      
+      if (!vehicle_type || !route_name) {
+        return showError('Vehicle type and route name are required');
+      }
+      
+      try {
+        const response = await makeRequest(`/public-transportation/admin/update/${vehicle.id}`, {
+          method: 'PUT',
+          body: { vehicle_type, route_name, occupancy_rate, status }
+        });
+        if (response?.success) {
+          showSuccess('Transportation updated successfully!');
+          modal.hide();
+          await loadPublicTransportationData();
+        } else {
+          showError(response.message || 'Failed to update transportation');
+        }
+      } catch (error) {
+        showError('Error updating transportation');
+      }
+    };
+  }
+}
+
+async function deletePublicTransportation(id) {
+  if (!confirm('Are you sure you want to delete this transport vehicle?')) {
+    return;
+  }
+
+  if (!isAdminUser(currentUser)) {
+    return showError('Hanya admin yang dapat menghapus data transportasi.');
+  }
+
   try {
-    const response = await makeRequest(`/feedback/${id}`);
-    if (response?.success && response.data) {
-      const fb = response.data;
-      const modalHtml = `
-        <div class="modal fade" id="dynamicFeedbackModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content glass-card border-0 neon-border-info">
-              <div class="modal-header border-bottom border-light">
-                <h5 class="modal-title">Citizen Feedback</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    const response = await makeRequest(`/public-transportation/admin/delete/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (response?.success) {
+      showSuccess('Transport vehicle deleted successfully!');
+      await loadPublicTransportationData();
+    } else {
+      showError(response.message || 'Gagal menghapus data transportasi.');
+    }
+  } catch (error) {
+    console.error('Error deleting transport:', error);
+    showError('Terjadi kesalahan saat menghapus data transportasi.');
+  }
+}
+
+function viewFeedback(id) {
+  try {
+    const fb = globalFeedbackData.find(item => item.id == id);
+    if (!fb) return showError('Data not found');
+    
+    const isAdmin = isAdminUser(currentUser);
+    
+    const modalHtml = `
+      <div class="modal fade" id="dynamicFeedbackModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content border-0">
+            <div class="modal-header">
+              <h5 class="modal-title">Citizen Feedback Details</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Type:</strong> <span class="badge bg-secondary">${fb.type || fb.feedback_type}</span></p>
+              <p><strong>Category:</strong> ${fb.category}</p>
+              <p><strong>Priority:</strong> <span class="badge bg-${getPriorityColor(fb.priority)}">${fb.priority}</span></p>
+              <p><strong>Message:</strong> ${fb.message || fb.description}</p>
+              <p><strong>Location:</strong> ${fb.location || fb.location_name || '-'}</p>
+              <p><strong>Submitted At:</strong> ${formatDate(fb.created_at || fb.submitted_at)}</p>
+              
+              <div class="mt-4">
+                <label class="form-label">Feedback Status</label>
+                ${isAdmin ? `
+                  <select id="editFeedbackStatus" class="form-select">
+                    <option value="open" ${fb.status === 'open' ? 'selected' : ''}>Open</option>
+                    <option value="in_review" ${fb.status === 'in_review' ? 'selected' : ''}>In Review</option>
+                    <option value="in_progress" ${fb.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                    <option value="resolved" ${fb.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                    <option value="closed" ${fb.status === 'closed' ? 'selected' : ''}>Closed</option>
+                  </select>
+                ` : `
+                  <h5><span class="badge bg-info">${fb.status}</span></h5>
+                `}
               </div>
-              <div class="modal-body">
-                <p><strong>Type:</strong> ${fb.type || fb.feedback_type}</p>
-                <p><strong>Category:</strong> ${fb.category}</p>
-                <p><strong>Status:</strong> ${fb.status}</p>
-                <p><strong>Priority:</strong> <span class="badge bg-${getPriorityColor(fb.priority)}">${fb.priority}</span></p>
-                <p><strong>Message:</strong> ${fb.message || fb.description}</p>
-                <p><strong>Created:</strong> ${formatDate(fb.created_at || fb.submitted_at)}</p>
+              
+              <div class="mt-3">
+                <label class="form-label">Admin Response</label>
+                ${isAdmin ? `
+                  <textarea id="editFeedbackNotes" class="form-control" rows="3">${fb.admin_notes || ''}</textarea>
+                ` : `
+                  <p class="p-2 bg-dark rounded text-light">${fb.admin_notes || 'No response yet'}</p>
+                `}
               </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              ${isAdmin ? `
+                <button type="button" class="btn btn-primary" id="editFeedbackSaveBtn">Save Changes</button>
+              ` : ''}
             </div>
           </div>
         </div>
-      `;
-      const oldModal = document.getElementById('dynamicFeedbackModal');
-      if (oldModal) oldModal.remove();
-      document.body.insertAdjacentHTML('beforeend', modalHtml);
-      const modal = new bootstrap.Modal(document.getElementById('dynamicFeedbackModal'));
-      modal.show();
+      </div>
+    `;
+    
+    const oldModal = document.getElementById('dynamicFeedbackModal');
+    if (oldModal) oldModal.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    const modal = new bootstrap.Modal(document.getElementById('dynamicFeedbackModal'));
+    modal.show();
+    
+    if (isAdmin) {
+      document.getElementById('editFeedbackSaveBtn').onclick = async () => {
+        const status = document.getElementById('editFeedbackStatus').value;
+        const notes = document.getElementById('editFeedbackNotes').value.trim();
+        
+        try {
+          const response = await makeRequest(`/feedback/${fb.id}/status`, {
+            method: 'PUT',
+            body: { status, notes }
+          });
+          if (response?.success) {
+            showSuccess('Feedback updated successfully!');
+            modal.hide();
+            await loadCitizenFeedback();
+          } else {
+            showError(response.message || 'Failed to update feedback');
+          }
+        } catch (error) {
+          showError('Error updating feedback');
+        }
+      };
     }
   } catch (error) {
-    console.error('Error fetching feedback:', error);
+    console.error('Error viewing feedback:', error);
   }
 }
 
@@ -1285,6 +1777,15 @@ function setupTabNavigationUpdated() {
 }
 
 async function showTab(tabName) {
+  // Update active states on tab links
+  document.querySelectorAll('[data-tab]').forEach(link => {
+    if (link.getAttribute('data-tab') === tabName) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+
   // Hide all tabs with fade out
   document.querySelectorAll('.section-content').forEach(tab => {
     tab.classList.remove('active');
@@ -1394,7 +1895,6 @@ function bindNewFeatureForms() {
       let qualityLevel = 'Moderate';
       if (aqiNum <= 50) qualityLevel = 'Good';
       else if (aqiNum <= 100) qualityLevel = 'Moderate';
-      else if (aqiNum <= 150) qualityLevel = 'Unhealthy for Sensitive Groups';
       else if (aqiNum <= 200) qualityLevel = 'Unhealthy';
       else if (aqiNum <= 300) qualityLevel = 'Very Unhealthy';
       else qualityLevel = 'Hazardous';
@@ -1463,12 +1963,23 @@ function bindNewFeatureForms() {
   if (transportationForm) {
     transportationForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const locationInput = document.getElementById('vehicleLocation').value.trim();
+      let lat = 0;
+      let lng = 0;
+      if (locationInput.includes(',')) {
+        const parts = locationInput.split(',');
+        lat = parseFloat(parts[0].trim()) || 0;
+        lng = parseFloat(parts[1].trim()) || 0;
+      } else if (locationInput) {
+        lat = parseFloat(locationInput) || 0;
+      }
+
       const formData = {
         vehicle_type: document.getElementById('vehicleType').value,
         vehicle_number: `VEH-${Date.now()}`,
         route_name: document.getElementById('vehicleRoute').value,
-        current_location_lat: 0,
-        current_location_lng: 0,
+        current_location_lat: lat,
+        current_location_lng: lng,
         occupancy_rate: parseInt(document.getElementById('vehicleCapacity').value) || 0
       };
 

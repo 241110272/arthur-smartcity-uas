@@ -491,6 +491,7 @@
                   <th>Occupancy</th>
                   <th>Status</th>
                   <th>Last Location</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="transportationTable">
@@ -769,8 +770,8 @@
               <input type="text" class="form-control" id="vehicleRoute" required>
             </div>
             <div class="mb-3">
-              <label for="vehicleCapacity" class="form-label">Capacity</label>
-              <input type="number" class="form-control" id="vehicleCapacity" min="1" required>
+              <label for="vehicleCapacity" class="form-label">Occupancy Rate (%)</label>
+              <input type="number" class="form-control" id="vehicleCapacity" min="0" max="100" placeholder="e.g. 75" required>
             </div>
             <div class="mb-3">
               <label for="vehicleLocation" class="form-label">Current Location</label>

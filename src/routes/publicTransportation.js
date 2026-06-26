@@ -23,5 +23,7 @@ router.post('/report-issue', isUser, PublicTransportationController.reportIssue)
 
 // Admin routes
 router.get('/admin/issues', isAdmin, PublicTransportationController.getActiveIssues);
+router.put('/admin/update/:transportId', isAdmin, PublicTransportationController.updateTransportAdmin);
+router.delete('/admin/delete/:transportId', isAdmin, PublicTransportationController.deleteTransportAdmin);
 
 module.exports = router;

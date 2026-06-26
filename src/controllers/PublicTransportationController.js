@@ -268,6 +268,48 @@ class PublicTransportationController {
       next(error);
     }
   }
+
+  /**
+   * Update transportation details (admin only)
+   */
+  static async updateTransportAdmin(req, res, next) {
+    try {
+      const { transportId } = req.params;
+      const { vehicle_type, route_name, occupancy_rate, status } = req.body;
+
+      await transportModel.update(transportId, {
+        vehicle_type,
+        route_name,
+        occupancy_rate: parseInt(occupancy_rate) || 0,
+        status: status || 'in_service',
+        last_update: new Date()
+      });
+
+      res.json({
+        success: true,
+        message: 'Data transportasi berhasil diperbarui'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Delete transportation (admin only)
+   */
+  static async deleteTransportAdmin(req, res, next) {
+    try {
+      const { transportId } = req.params;
+      await transportModel.delete(transportId);
+
+      res.json({
+        success: true,
+        message: 'Transportasi berhasil dihapus'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = PublicTransportationController;
