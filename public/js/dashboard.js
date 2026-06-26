@@ -64,6 +64,10 @@ function showError(message) {
   alert(message);
 }
 
+function isAdminUser(user = currentUser) {
+  return user?.role === 'admin' || user?.role === 'superadmin';
+}
+
 function formatDate(dateString) {
   const options = {
     year: 'numeric',
@@ -115,7 +119,7 @@ async function loadCurrentUser() {
 
   if (currentUser) {
     document.getElementById('userName').textContent = currentUser.full_name || currentUser.username || 'User';
-    if (currentUser.role !== 'admin') {
+    if (!isAdminUser(currentUser)) {
       const adminDropdown = document.getElementById('adminDropdown');
       if (adminDropdown) {
         adminDropdown.closest('li').style.display = 'none';
@@ -133,7 +137,7 @@ async function loadDashboardSummaries() {
 }
 
 async function loadUserSummary() {
-  if (currentUser?.role === 'admin') {
+  if (isAdminUser(currentUser)) {
     const response = await makeRequest('/auth/users');
     if (response?.success && Array.isArray(response.data)) {
       document.getElementById('userCount').textContent = response.data.length;
@@ -457,7 +461,7 @@ async function loadIncidentsManagement() {
  * Load users management tab
  */
 async function loadUsersManagement() {
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminUser(currentUser)) {
     const user = currentUser || { id: '-', username: '-', email: '-', full_name: '-', role: '-', phone: '-', created_at: '-' };
     document.getElementById('usersTable').innerHTML = `
       <tr>
@@ -505,7 +509,7 @@ async function loadUsersManagement() {
 async function createTrafficLight(event) {
   event.preventDefault();
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminUser(currentUser)) {
     return showError('Hanya admin yang dapat menambahkan traffic light.');
   }
 
@@ -550,7 +554,7 @@ async function createTrafficLight(event) {
 async function createPedestrianCrossing(event) {
   event.preventDefault();
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminUser(currentUser)) {
     return showError('Hanya admin yang dapat menambahkan pedestrian crossing.');
   }
 
@@ -645,7 +649,7 @@ async function deleteTrafficLight(id) {
     return;
   }
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminUser(currentUser)) {
     return showError('Hanya admin yang dapat menghapus traffic light.');
   }
 
@@ -671,7 +675,7 @@ async function deletePedestrian(id) {
     return;
   }
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminUser(currentUser)) {
     return showError('Hanya admin yang dapat menghapus pedestrian crossing.');
   }
 
@@ -697,7 +701,7 @@ async function deleteIncident(id) {
     return;
   }
 
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminUser(currentUser)) {
     return showError('Hanya admin yang dapat menghapus incident.');
   }
 
@@ -790,12 +794,20 @@ async function loadAirQualityData() {
   try {
     const response = await makeRequest('/air-quality/latest');
     if (response?.success) {
-      const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      const rawData = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      const data = rawData.map(item => ({
+        location_name: item.location_name || item.location || 'Unknown',
+        aqi: item.aqi ?? item.aqi_index ?? item.aqiIndex ?? 0,
+        pm2_5: item.pm2_5 ?? item.pm25 ?? item.pm_2_5 ?? null,
+        pm10: item.pm10 ?? item.pm10 ?? null,
+        quality_level: item.quality_level || item.qualityLevel || 'Unknown',
+        recorded_at: item.recorded_at || item.updated_at || item.last_updated || null
+      }));
       
       // Update counts based on quality level
       const goodCount = data.filter(d => d.quality_level === 'Good').length;
       const moderateCount = data.filter(d => d.quality_level === 'Moderate').length;
-      const unhealthyCount = data.filter(d => d.quality_level === 'Unhealthy').length;
+      const unhealthyCount = data.filter(d => ['Unhealthy', 'Very Unhealthy', 'Hazardous'].includes(d.quality_level)).length;
 
       document.getElementById('goodAQCount').textContent = goodCount;
       document.getElementById('moderateAQCount').textContent = moderateCount;
@@ -804,12 +816,12 @@ async function loadAirQualityData() {
       // Build table
       const dataHTML = data.map(item => `
         <tr>
-          <td>${item.location}</td>
-          <td><strong>${item.aqi_index}</strong></td>
-          <td>${item.pm25}</td>
-          <td>${item.pm10}</td>
+          <td>${item.location_name}</td>
+          <td><strong>${item.aqi}</strong></td>
+          <td>${item.pm2_5 ?? '-'}</td>
+          <td>${item.pm10 ?? '-'}</td>
           <td><span class="badge bg-${getQualityColor(item.quality_level)}">${item.quality_level}</span></td>
-          <td>${formatDate(item.updated_at)}</td>
+          <td>${item.recorded_at ? formatDate(item.recorded_at) : '-'}</td>
         </tr>
       `).join('');
 
@@ -1233,7 +1245,7 @@ function bindNewFeatureForms() {
 }
 
 async function updateTrafficLight(id) {
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminUser(currentUser)) {
     return showError('Hanya admin yang dapat memperbarui traffic light.');
   }
 
@@ -1266,7 +1278,7 @@ async function updateTrafficLight(id) {
 }
 
 async function updatePedestrian(id) {
-  if (currentUser?.role !== 'admin') {
+  if (!isAdminUser(currentUser)) {
     return showError('Hanya admin yang dapat memperbarui pedestrian crossing.');
   }
 
