@@ -7,7 +7,6 @@ const socketIO = require('socket.io');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
 require('dotenv').config();
-const helmet = require('helmet');
 
 // Import Passport Configuration
 require('./src/config/passport.config');
@@ -60,7 +59,6 @@ app.use(cookieParser());
 
 // Security headers
 app.use(secureCookies);
-app.use(helmet());
 
 // Session setup (server-side session management)
 setupSession(app);

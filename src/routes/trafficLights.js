@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const TrafficLightController = require('../controllers/TrafficLightController');
-const { authenticateJWT, isAdmin, authorize } = require('../middleware/auth.middleware');
+const { authMiddleware, authorize } = require('../middleware/auth');
 
 /**
  * Traffic Light Routes
@@ -24,17 +24,17 @@ router.get('/:id', (req, res, next) => {
 });
 
 // POST - Create new traffic light (admin only)
-router.post('/', authenticateJWT, isAdmin, (req, res, next) => {
+router.post('/', authMiddleware, authorize('admin'), (req, res, next) => {
   TrafficLightController.create(req, res, next);
 });
 
 // PUT - Update traffic light status (admin only)
-router.put('/:id/status', authenticateJWT, isAdmin, (req, res, next) => {
+router.put('/:id/status', authMiddleware, authorize('admin'), (req, res, next) => {
   TrafficLightController.updateStatus(req, res, next);
 });
 
 // POST - Automate traffic light (admin only)
-router.post('/:id/automate', authenticateJWT, isAdmin, (req, res, next) => {
+router.post('/:id/automate', authMiddleware, authorize('admin'), (req, res, next) => {
   TrafficLightController.automate(req, res, next);
 });
 
@@ -54,7 +54,7 @@ router.get('/:id/peak-times', (req, res, next) => {
 });
 
 // DELETE - Delete traffic light (admin only)
-router.delete('/:id', authenticateJWT, isAdmin, (req, res, next) => {
+router.delete('/:id', authMiddleware, authorize('admin'), (req, res, next) => {
   TrafficLightController.delete(req, res, next);
 });
 
