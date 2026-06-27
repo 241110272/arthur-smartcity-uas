@@ -18,18 +18,24 @@ async function setupDatabase() {
   let conn;
 
   try {
-    conn = await mysql.createConnection({
+    const dbConfig = {
       host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT),
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME || 'defaultdb',
       multipleStatements: true,
       connectTimeout: 30000,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    });
+    };
+
+    if (process.env.DB_NAME && process.env.DB_HOST !== 'localhost') {
+        dbConfig.database = process.env.DB_NAME;
+    }
+
+    if (String(process.env.DB_SSL).toLowerCase() === 'true') {
+      dbConfig.ssl = { rejectUnauthorized: false };
+    }
+
+    conn = await mysql.createConnection(dbConfig);
 
     console.log('✅ Connected to Aiven MySQL');
 

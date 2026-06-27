@@ -138,7 +138,9 @@
               <h5 class="mb-0">Cumulative Analytics</h5>
             </div>
             <div class="card-body">
-              <canvas id="analyticChart" style="max-height: 350px;"></canvas>
+              <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="analyticChart"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -153,6 +155,53 @@
                 <li class="list-group-item text-muted text-center">Loading logs...</li>
               </ul>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Analytics Grid -->
+      <h5 class="mb-3 mt-4 text-white">Feature Analytics Breakdown</h5>
+      <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header border-bottom py-2"><h6 class="mb-0 text-muted">Traffic Lights Status</h6></div>
+            <div class="card-body p-2"><div style="position: relative; height: 180px; width: 100%;"><canvas id="trafficChart"></canvas></div></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header border-bottom py-2"><h6 class="mb-0 text-muted">Pedestrian Signals</h6></div>
+            <div class="card-body p-2"><div style="position: relative; height: 180px; width: 100%;"><canvas id="pedestrianChart"></canvas></div></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header border-bottom py-2"><h6 class="mb-0 text-muted">Incident Severity</h6></div>
+            <div class="card-body p-2"><div style="position: relative; height: 180px; width: 100%;"><canvas id="incidentChart"></canvas></div></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header border-bottom py-2"><h6 class="mb-0 text-muted">Feedback Categories</h6></div>
+            <div class="card-body p-2"><div style="position: relative; height: 180px; width: 100%;"><canvas id="feedbackChart"></canvas></div></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header border-bottom py-2"><h6 class="mb-0 text-muted">Air Quality Overview</h6></div>
+            <div class="card-body p-2"><div style="position: relative; height: 180px; width: 100%;"><canvas id="airQualityChart"></canvas></div></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header border-bottom py-2"><h6 class="mb-0 text-muted">Emergency Alert Types</h6></div>
+            <div class="card-body p-2"><div style="position: relative; height: 180px; width: 100%;"><canvas id="emergencyChart"></canvas></div></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header border-bottom py-2"><h6 class="mb-0 text-muted">Public Transport Status</h6></div>
+            <div class="card-body p-2"><div style="position: relative; height: 180px; width: 100%;"><canvas id="publicTransportChart"></canvas></div></div>
           </div>
         </div>
       </div>
@@ -478,7 +527,7 @@
                   <th>Route</th>
                   <th>Occupancy</th>
                   <th>Status</th>
-                  <th>Last Location</th>
+                  <th>Last Updated</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -955,8 +1004,76 @@
   <!-- Toast Notification Container -->
   <div id="toastContainer"></div>
 
+  <!-- Profile Modal -->
+  <div class="modal fade" id="profileModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content text-dark">
+        <div class="modal-header">
+          <h5 class="modal-title">Profil Pengguna</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="profileForm">
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input type="text" class="form-control" id="profileUsername" readonly disabled>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nama Lengkap</label>
+              <input type="text" class="form-control" id="profileFullName" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="profileEmail" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nomor Telepon</label>
+              <input type="tel" class="form-control" id="profilePhone">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" form="profileForm" class="btn btn-primary">Simpan Profil</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content text-dark">
+        <div class="modal-header">
+          <h5 class="modal-title">Ubah Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="changePasswordForm">
+            <div class="mb-3">
+              <label class="form-label">Password Lama</label>
+              <input type="password" class="form-control" id="oldPassword" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Password Baru</label>
+              <input type="password" class="form-control" id="newPassword" required minlength="8">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Konfirmasi Password Baru</label>
+              <input type="password" class="form-control" id="confirmPassword" required minlength="8">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" form="changePasswordForm" class="btn btn-primary">Simpan Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-  <script src="/js/dashboard.js"></script>
+  <script src="/js/dashboard.js?v=2"></script>
 </body>
 </html>

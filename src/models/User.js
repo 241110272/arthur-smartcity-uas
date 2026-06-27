@@ -49,6 +49,22 @@ class User extends BaseModel {
   }
 
   /**
+   * Find user by id including password
+   */
+  async findWithPasswordById(id) {
+    const connection = await pool.getConnection();
+    try {
+      const [rows] = await connection.execute(
+        `SELECT * FROM ${this.tableName} WHERE id = ?`,
+        [id]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } finally {
+      connection.release();
+    }
+  }
+
+  /**
    * Find user berdasarkan email (async operation)
    */
   async findByEmail(email) {

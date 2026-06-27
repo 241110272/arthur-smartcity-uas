@@ -210,8 +210,8 @@ class AuthController {
         });
       }
 
-      // Get user
-      const user = await userModel.findById(req.user.userId);
+      // Get user with password
+      const user = await userModel.findWithPasswordById(req.user.userId);
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -222,7 +222,7 @@ class AuthController {
       // Verify old password
       const isOldPasswordValid = await userModel.verifyPassword(oldPassword, user.password);
       if (!isOldPasswordValid) {
-        return res.status(401).json({
+        return res.status(400).json({
           success: false,
           message: 'Password lama tidak sesuai'
         });
@@ -234,6 +234,34 @@ class AuthController {
       res.json({
         success: true,
         message: 'Password berhasil diubah'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Update profile
+   */
+  static async updateProfile(req, res, next) {
+    try {
+      const { full_name, email, phone } = req.body;
+      const updateData = { updated_at: new Date() };
+      
+      if (full_name !== undefined) updateData.full_name = full_name;
+      if (email !== undefined) updateData.email = email;
+      if (phone !== undefined) updateData.phone = phone;
+
+      await userModel.update(req.user.userId, updateData);
+
+      // Fetch updated user to return
+      const updatedUser = await userModel.findById(req.user.userId);
+      if (updatedUser) delete updatedUser.password;
+
+      res.json({
+        success: true,
+        message: 'Profil berhasil diperbarui',
+        data: updatedUser
       });
     } catch (error) {
       next(error);

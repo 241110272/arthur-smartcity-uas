@@ -33,4 +33,8 @@ router.post('/change-password', authMiddleware, (req, res, next) => {
   AuthController.updatePassword(req, res, next);
 });
 
+router.put('/update-profile', authMiddleware, (req, res, next) => {
+  AuthController.updateProfile(req, res, next);
+});
+
 module.exports = router;

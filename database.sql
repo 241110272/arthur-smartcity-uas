@@ -307,42 +307,41 @@ CREATE INDEX idx_feedback_datetime ON citizen_feedback(submitted_by, submitted_a
 -- ========================================
 
 -- Sample Users (passwords are 'password' hashed with bcrypt)
-INSERT INTO users (username, email, password, full_name, phone, role) VALUES
+INSERT IGNORE INTO users (username, email, password, full_name, phone, role) VALUES
 ('superadmin', 'superadmin@smartcity.com', '$2a$12$cOGfbW1zCUWQdueYjk0GsuDX3Pcu18vq8YaMYU1gMV4MNmlwbVkYy', 'Super Admin User', '081234567890', 'superadmin'),
 ('admin', 'admin@smartcity.com', '$2a$12$cOGfbW1zCUWQdueYjk0GsuDX3Pcu18vq8YaMYU1gMV4MNmlwbVkYy', 'Admin User', '082345678901', 'admin'),
-('operator', 'operator@smartcity.com', '$2a$12$cOGfbW1zCUWQdueYjk0GsuDX3Pcu18vq8YaMYU1gMV4MNmlwbVkYy', 'Operator User', '083456789012', 'user'),
 ('user1', 'user1@smartcity.com', '$2a$12$cOGfbW1zCUWQdueYjk0GsuDX3Pcu18vq8YaMYU1gMV4MNmlwbVkYy', 'Regular User', '084567890123', 'user');
 
 -- Sample Traffic Lights
-INSERT INTO traffic_lights (intersection_name, location, latitude, longitude, current_status, status_duration) VALUES
+INSERT IGNORE INTO traffic_lights (intersection_name, location, latitude, longitude, current_status, status_duration) VALUES
 ('Intersection HI - Sudirman', 'Jl. H.R Rasuna Said', -6.2087, 106.7968, 'red', 30),
 ('Intersection Semanggi', 'Jl. Jendral Sudirman', -6.2131, 106.8000, 'green', 45),
 ('Intersection Blok M', 'Jl. Melawai', -6.2755, 106.7958, 'red', 30),
 ('Intersection Bundaran HI', 'Jl. Gatot Subroto', -6.2093, 106.8010, 'yellow', 15);
 
 -- Sample Pedestrian Crossings
-INSERT INTO pedestrian_crossings (location_name, street_name, latitude, longitude, current_signal, wait_time_estimate) VALUES
+INSERT IGNORE INTO pedestrian_crossings (location_name, street_name, latitude, longitude, current_signal, wait_time_estimate) VALUES
 ('Zebra Crossing HI', 'Jl. H.R Rasuna Said', -6.2087, 106.7968, 'wait', 45),
 ('Zebra Crossing Semanggi', 'Jl. Jendral Sudirman', -6.2131, 106.8000, 'walk', 0),
 ('Zebra Crossing Blok M', 'Jl. Melawai', -6.2755, 106.7958, 'wait', 30),
 ('Zebra Crossing Bundaran', 'Jl. Gatot Subroto', -6.2093, 106.8010, 'walk', 0);
 
 -- Sample Traffic Monitoring Data
-INSERT INTO traffic_monitoring (location_name, latitude, longitude, congestion_level, vehicle_count, average_speed, recorded_by) VALUES
+INSERT IGNORE INTO traffic_monitoring (location_name, latitude, longitude, congestion_level, vehicle_count, average_speed, recorded_by) VALUES
 ('Jl. H.R Rasuna Said', -6.2087, 106.7968, 'high', 245, 15.5, 1),
 ('Jl. Jendral Sudirman', -6.2131, 106.8000, 'medium', 180, 25.3, 1),
 ('Jl. Melawai', -6.2755, 106.7958, 'low', 95, 35.8, 1);
 
 -- Sample Air Quality Data
-INSERT INTO air_quality_monitoring (location_name, latitude, longitude, aqi, pm2_5, pm10, o3, no2, so2, co, quality_level) VALUES
+INSERT IGNORE INTO air_quality_monitoring (location_name, latitude, longitude, aqi, pm2_5, pm10, o3, no2, so2, co, quality_level) VALUES
 ('Jl. H.R Rasuna Said', -6.2087, 106.7968, 125, 28.5, 45.2, 25.3, 18.5, 12.3, 2.1, 'Unhealthy'),
 ('Jl. Jendral Sudirman', -6.2131, 106.8000, 85, 18.2, 32.1, 18.5, 12.1, 8.5, 1.5, 'Moderate'),
 ('Jl. Melawai', -6.2755, 106.7958, 55, 12.1, 20.5, 12.3, 8.2, 5.1, 0.8, 'Moderate');
 
 -- Sample Public Transportation
-INSERT INTO public_transportation (vehicle_type, vehicle_number, route_name, current_location_lat, current_location_lng, occupancy_rate, status, operator_id) VALUES
-('bus', 'BUS-001', 'Route A: Downtown - Airport', -6.2087, 106.7968, 85, 'in_service', 3),
-('mrt', 'MRT-005', 'Route B: North - South', -6.2131, 106.8000, 72, 'in_service', 3),
-('bus', 'BUS-002', 'Route C: East - West', -6.2755, 106.7958, 65, 'in_service', 3),
-('minibus', 'MB-010', 'Route D: City Circle', -6.2093, 106.8010, 90, 'in_service', 3);
+INSERT IGNORE INTO public_transportation (vehicle_type, vehicle_number, route_name, current_location_lat, current_location_lng, occupancy_rate, status, operator_id) VALUES
+('bus', 'BUS-001', 'Route A: Downtown - Airport', -6.2087, 106.7968, 85, 'in_service', 2),
+('mrt', 'MRT-005', 'Route B: North - South', -6.2131, 106.8000, 72, 'in_service', 2),
+('bus', 'BUS-002', 'Route C: East - West', -6.2755, 106.7958, 65, 'in_service', 2),
+('minibus', 'MB-010', 'Route D: City Circle', -6.2093, 106.8010, 90, 'in_service', 2);
 

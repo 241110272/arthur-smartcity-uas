@@ -148,9 +148,7 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
 
-app.get('/admin-dashboard', isAdmin, (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'admin-dashboard.html'));
-});
+
 
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'login.html'));
@@ -158,6 +156,10 @@ app.get('/login', (req, res) => {
 
 app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'register.html'));
+});
+
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'terms.html'));
 });
 
 /**

@@ -69,7 +69,6 @@ class PublicTransportation extends BaseModel {
     const query = `
       SELECT * FROM ${this.tableName}
       WHERE status = 'in_service'
-      AND last_update >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
       ORDER BY vehicle_type, route_name
     `;
     return await DatabaseUtil.executeSelect(query);
@@ -100,7 +99,6 @@ class PublicTransportation extends BaseModel {
          sin(radians(?)) * sin(radians(current_location_lat)))) AS distance_km
       FROM ${this.tableName}
       WHERE status = 'in_service'
-      AND last_update >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
       AND (6371 * acos(cos(radians(?)) * cos(radians(current_location_lat)) * 
            cos(radians(current_location_lng) - radians(?)) + 
            sin(radians(?)) * sin(radians(current_location_lat)))) <= ?

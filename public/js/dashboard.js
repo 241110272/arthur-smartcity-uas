@@ -267,12 +267,14 @@ async function loadIncidents() {
  */
 async function initializeCharts() {
   try {
-    const [trafficRes, pedestrianRes, incidentRes, feedbackRes, airRes] = await Promise.all([
+    const [trafficRes, pedestrianRes, incidentRes, feedbackRes, airRes, emergencyRes, publicTransportRes] = await Promise.all([
       makeRequest('/traffic-lights'),
       makeRequest('/pedestrians'),
       makeRequest('/incidents?page=1&limit=100'),
       makeRequest('/feedback'),
-      makeRequest('/air-quality/latest')
+      makeRequest('/air-quality/latest'),
+      makeRequest('/emergency-alerts/active'),
+      makeRequest('/public-transportation/active')
     ]);
 
     const counts = {
@@ -289,9 +291,21 @@ async function initializeCharts() {
     const ctx = document.getElementById('analyticChart');
     if (!ctx) return;
     
-    if (window.analyticChart) {
+    if (window.analyticChart && typeof window.analyticChart.destroy === 'function') {
       window.analyticChart.destroy();
     }
+
+    // Unpack data arrays
+    const trafficData = Array.isArray(trafficRes?.data) ? trafficRes.data : trafficRes?.data?.data || [];
+    const pedestrianData = Array.isArray(pedestrianRes?.data) ? pedestrianRes.data : pedestrianRes?.data?.data || [];
+    const incidentData = Array.isArray(incidentRes?.data) ? incidentRes.data : incidentRes?.data?.data || [];
+    const feedbackData = Array.isArray(feedbackRes?.data) ? feedbackRes.data : feedbackRes?.data?.data || [];
+    const airData = Array.isArray(airRes?.data) ? airRes.data : airRes?.data?.data || [];
+    const emergencyData = Array.isArray(emergencyRes?.data) ? emergencyRes.data : emergencyRes?.data?.data || [];
+    const transportData = Array.isArray(publicTransportRes?.data) ? publicTransportRes.data : publicTransportRes?.data?.data || [];
+
+    // Initialize detailed charts
+    initializeFeatureCharts(trafficData, pedestrianData, incidentData, feedbackData, airData, emergencyData, transportData);
 
     window.analyticChart = new Chart(ctx, {
       type: 'bar',
@@ -334,8 +348,8 @@ async function initializeCharts() {
       feedbacks.forEach(f => {
         logs.push({
           type: 'Feedback',
-          desc: `New ${f.type || 'feedback'}: ${f.category}`,
-          time: new Date(f.created_at).getTime()
+          desc: `New ${f.feedback_type || f.type || 'feedback'}: ${f.category}`,
+          time: new Date(f.submitted_at || f.created_at).getTime()
         });
       });
       
@@ -373,6 +387,8 @@ async function initializeCharts() {
     }
   } catch (error) {
     console.error('Error initializing charts:', error);
+    const logList = document.getElementById('systemLogList');
+    if (logList) logList.innerHTML = `<li class="text-danger">Error: ${error.message}<br/>${error.stack}</li>`;
   }
 }
 
@@ -611,7 +627,7 @@ async function loadUsersManagement() {
           <td>${user.username}</td>
           <td>${user.email}</td>
           <td>${user.full_name}</td>
-          <td><span class="badge bg-${user.role === 'admin' ? 'danger' : user.role === 'operator' ? 'warning' : 'info'}">${user.role}</span></td>
+          <td><span class="badge bg-${user.role === 'superadmin' ? 'danger' : user.role === 'admin' ? 'warning' : 'info'}">${user.role}</span></td>
           <td>${user.phone || '-'}</td>
           <td>${formatDate(user.created_at)}</td>
         </tr>
@@ -963,8 +979,8 @@ async function loadEmergencyAlerts() {
       const alertsHTML = alerts.map(alert => `
         <tr>
           <td>${alert.id}</td>
-          <td><span class="badge bg-secondary">${alert.type}</span></td>
-          <td>${alert.location}</td>
+          <td><span class="badge bg-secondary">${alert.alert_type}</span></td>
+          <td>${alert.location_name}</td>
           <td><span class="badge bg-${getSeverityColor(alert.severity)}">${alert.severity}</span></td>
           <td><span class="badge bg-info">${alert.status}</span></td>
           <td>${formatDate(alert.created_at)}</td>
@@ -1235,7 +1251,7 @@ async function loadPublicTransportationData() {
           <td>${vehicle.route_name}</td>
           <td>${vehicle.occupancy_rate || 0}%</td>
           <td><span class="badge bg-success">${vehicle.status}</span></td>
-          <td>${vehicle.current_location_lat || 0}, ${vehicle.current_location_lng || 0}</td>
+          <td>${formatDate(vehicle.last_update)}</td>
           <td>
             <button class="btn btn-sm btn-info" onclick="viewPublicTransportation(${vehicle.id})">View</button>
           </td>
@@ -1270,11 +1286,11 @@ async function loadCitizenFeedback() {
       const feedbackHTML = feedback.map(item => `
         <tr>
           <td>${item.id}</td>
-          <td><span class="badge bg-secondary">${item.type}</span></td>
+          <td><span class="badge bg-secondary">${item.feedback_type}</span></td>
           <td>${item.category}</td>
           <td><span class="badge bg-info">${item.status}</span></td>
           <td><span class="badge bg-${getPriorityColor(item.priority)}">${item.priority}</span></td>
-          <td>${formatDate(item.created_at)}</td>
+          <td>${formatDate(item.submitted_at)}</td>
           <td>
             <button class="btn btn-sm btn-info" onclick="viewFeedback(${item.id})">View</button>
           </td>
@@ -2126,3 +2142,167 @@ function getIncidentStatusColor(status) {
   };
   return colors[status] || 'secondary';
 }
+
+/**
+ * Group array by key and return counts
+ */
+function getCountsByProp(arr, prop, defaultLabel = 'Unknown') {
+  return arr.reduce((acc, item) => {
+    const key = item[prop] || defaultLabel;
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+/**
+ * Initialize 7 feature specific charts
+ */
+function initializeFeatureCharts(traffic, pedestrian, incident, feedback, air, emergency, transport) {
+  const chartConfigs = [
+    { id: 'trafficChart', type: 'doughnut', data: traffic, prop: 'current_status' },
+    { id: 'pedestrianChart', type: 'pie', data: pedestrian, prop: 'current_signal' },
+    { id: 'incidentChart', type: 'bar', data: incident, prop: 'severity' },
+    { id: 'feedbackChart', type: 'doughnut', data: feedback, prop: 'category' },
+    { id: 'airQualityChart', type: 'polarArea', data: air, prop: 'quality_level' },
+    { id: 'emergencyChart', type: 'bar', data: emergency, prop: 'alert_type' },
+    { id: 'publicTransportChart', type: 'pie', data: transport, prop: 'status' }
+  ];
+
+  if (!window.featureCharts) window.featureCharts = {};
+
+  chartConfigs.forEach(cfg => {
+    const ctx = document.getElementById(cfg.id);
+    if (!ctx) return;
+
+    if (window.featureCharts[cfg.id]) {
+      window.featureCharts[cfg.id].destroy();
+    }
+
+    const counts = getCountsByProp(cfg.data, cfg.prop);
+    const labels = Object.keys(counts);
+    const data = Object.values(counts);
+
+    const bgColors = ['#e63946', '#a8dadc', '#457b9d', '#1d3557', '#00ffcc', '#f72585', '#4cc9f0', '#f8961e', '#9d4edd'];
+
+    window.featureCharts[cfg.id] = new Chart(ctx, {
+      type: cfg.type,
+      data: {
+        labels,
+        datasets: [{
+          label: 'Total',
+          data,
+          backgroundColor: bgColors.slice(0, labels.length),
+          borderWidth: 0,
+          borderRadius: cfg.type === 'bar' ? 4 : 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { 
+            display: cfg.type !== 'bar',
+            position: 'right',
+            labels: { color: '#ccc', font: { size: 10 } }
+          }
+        },
+        scales: cfg.type === 'bar' ? {
+          y: { beginAtZero: true, ticks: { color: '#888', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color: '#888' }, grid: { display: false } }
+        } : (cfg.type === 'polarArea' ? {
+          r: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        } : undefined)
+      }
+    });
+  });
+}
+
+/**
+ * Bind User Menu Modals
+ */
+function bindUserMenuForms() {
+  const profileLink = document.getElementById('profileLink');
+  const changePasswordLink = document.getElementById('changePasswordLink');
+  
+  const profileForm = document.getElementById('profileForm');
+  const changePasswordForm = document.getElementById('changePasswordForm');
+
+  if (profileLink) {
+    profileLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+      document.getElementById('profileUsername').value = currentUser.username || '';
+      document.getElementById('profileFullName').value = currentUser.full_name || '';
+      document.getElementById('profileEmail').value = currentUser.email || '';
+      document.getElementById('profilePhone').value = currentUser.phone || '';
+      
+      const modal = new bootstrap.Modal(document.getElementById('profileModal'));
+      modal.show();
+    });
+  }
+
+  if (changePasswordLink) {
+    changePasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (document.getElementById('changePasswordForm')) {
+        document.getElementById('changePasswordForm').reset();
+      }
+      const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+      modal.show();
+    });
+  }
+
+  if (profileForm) {
+    profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        full_name: document.getElementById('profileFullName').value,
+        email: document.getElementById('profileEmail').value,
+        phone: document.getElementById('profilePhone').value
+      };
+      
+      const response = await makeRequest('/auth/update-profile', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
+      
+      if (response && response.success) {
+        showToast('Profil berhasil diperbarui', 'success');
+        currentUser = response.data;
+        setUser(currentUser);
+        document.getElementById('userName').textContent = currentUser.full_name || currentUser.username || 'User';
+        bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+      } else {
+        showToast(response?.message || 'Gagal memperbarui profil', 'danger');
+      }
+    });
+  }
+
+  if (changePasswordForm) {
+    changePasswordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        oldPassword: document.getElementById('oldPassword').value,
+        newPassword: document.getElementById('newPassword').value,
+        confirmPassword: document.getElementById('confirmPassword').value
+      };
+      
+      const response = await makeRequest('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      
+      if (response && response.success) {
+        showToast('Password berhasil diubah', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+      } else {
+        showToast(response?.message || 'Gagal mengubah password', 'danger');
+      }
+    });
+  }
+}
+
+// Ensure bindUserMenuForms is called
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => bindUserMenuForms(), 1000);
+});
