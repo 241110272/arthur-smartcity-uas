@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const AuthController = require('../controllers/AuthController');
-const { authMiddleware, authorize } = require('../middleware/auth');
+const { authenticateJWT, isAdmin, authorize } = require('../middleware/auth.middleware');
 
 /**
  * Auth Routes
@@ -19,12 +19,12 @@ router.post('/login', (req, res, next) => {
 });
 
 // GET - Get current user (require auth)
-router.get('/me', authMiddleware, (req, res, next) => {
+router.get('/me', authenticateJWT, (req, res, next) => {
   AuthController.getCurrentUser(req, res, next);
 });
 
 // GET - Get all users (admin only)
-router.get('/users', authMiddleware, authorize('admin'), (req, res, next) => {
+router.get('/users', authenticateJWT, isAdmin, (req, res, next) => {
   AuthController.getAllUsers(req, res, next);
 });
 
