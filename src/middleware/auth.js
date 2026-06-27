@@ -34,10 +34,12 @@ const authorize = (...allowedRoles) => {
     }
 
     if (allowedRoles.length > 0 && !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Anda tidak memiliki akses ke resource ini'
-      });
+      if (req.user.role !== 'superadmin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Anda tidak memiliki akses ke resource ini'
+        });
+      }
     }
 
     next();
