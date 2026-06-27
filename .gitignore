@@ -3,6 +3,10 @@ node_modules/
 .env.*
 npm-debug.log
 .DS_Store
+reset-db.js
+test-api.js
+test-insert.js
+fix-dom.js
 
 # Optional
 .vscode/

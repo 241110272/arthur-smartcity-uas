@@ -168,7 +168,7 @@ async function loadCurrentUser() {
   }
 
   if (currentUser) {
-    document.getElementById('userName').textContent = currentUser.full_name || currentUser.username || 'User';
+    if(document.getElementById('userName')) document.getElementById('userName').textContent = currentUser.full_name || currentUser.username || 'User';
   }
 }
 
@@ -180,12 +180,12 @@ async function loadUserSummary() {
   if (isAdminUser(currentUser)) {
     const response = await makeRequest('/auth/users');
     if (response?.success && Array.isArray(response.data)) {
-      document.getElementById('userCount').textContent = response.data.length;
+      if(document.getElementById('userCount')) document.getElementById('userCount').textContent = response.data.length;
       return;
     }
   }
 
-  document.getElementById('userCount').textContent = '1';
+  if(document.getElementById('userCount')) document.getElementById('userCount').textContent = '1';
 }
 
 /**
@@ -197,7 +197,7 @@ async function loadTrafficLights() {
     if (response?.success) {
       const data = response.data || [];
       globalTrafficLightsData = data;
-      document.getElementById('trafficLightCount').textContent = data.length;
+      if(document.getElementById('trafficLightCount')) document.getElementById('trafficLightCount').textContent = data.length;
 
       const listHTML = data.map(light => `
         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
@@ -224,7 +224,7 @@ async function loadPedestrianCrossings() {
     const response = await makeRequest('/pedestrians');
     if (response?.success) {
       const data = response.data || [];
-      document.getElementById('pedestrianCount').textContent = data.length;
+      if(document.getElementById('pedestrianCount')) document.getElementById('pedestrianCount').textContent = data.length;
     }
   } catch (error) {
     console.error('Error loading pedestrian crossings:', error);
@@ -240,7 +240,7 @@ async function loadIncidents() {
     if (response?.success) {
       const incidents = Array.isArray(response.data) ? response.data : response.data?.data || [];
       globalIncidentsData = incidents;
-      document.getElementById('incidentCount').textContent = incidents.length;
+      if(document.getElementById('incidentCount')) document.getElementById('incidentCount').textContent = incidents.length;
 
       const incidentsHTML = incidents.map(incident => `
         <tr>
@@ -971,9 +971,9 @@ async function loadEmergencyAlerts() {
       globalEmergencyAlertsData = alerts;
       
       // Update counts
-      document.getElementById('activeAlertsCount').textContent = alerts.length;
+      if(document.getElementById('activeAlertsCount')) document.getElementById('activeAlertsCount').textContent = alerts.length;
       const criticalCount = alerts.filter(a => a.severity === 'critical').length;
-      document.getElementById('criticalAlertsCount').textContent = criticalCount;
+      if(document.getElementById('criticalAlertsCount')) document.getElementById('criticalAlertsCount').textContent = criticalCount;
 
       // Build table
       const alertsHTML = alerts.map(alert => `
@@ -1109,9 +1109,9 @@ async function loadAirQualityData() {
       const moderateCount = data.filter(d => d.quality_level === 'Moderate').length;
       const unhealthyCount = data.filter(d => ['Unhealthy', 'Very Unhealthy', 'Hazardous'].includes(d.quality_level)).length;
 
-      document.getElementById('goodAQCount').textContent = goodCount;
-      document.getElementById('moderateAQCount').textContent = moderateCount;
-      document.getElementById('unhealthyAQCount').textContent = unhealthyCount;
+      if(document.getElementById('goodAQCount')) document.getElementById('goodAQCount').textContent = goodCount;
+      if(document.getElementById('moderateAQCount')) document.getElementById('moderateAQCount').textContent = moderateCount;
+      if(document.getElementById('unhealthyAQCount')) document.getElementById('unhealthyAQCount').textContent = unhealthyCount;
 
       const isAdmin = isAdminUser(currentUser);
       const aqActionHeader = document.getElementById('aqActionHeader');
@@ -1146,19 +1146,19 @@ function viewAirQuality(id) {
   const aq = globalAirQualityData.find(item => item.id == id);
   if (!aq) return showError('Data not found');
   
-  document.getElementById('viewAqLocation').textContent = aq.location_name;
-  document.getElementById('viewAqIndex').textContent = aq.aqi;
+  if(document.getElementById('viewAqLocation')) document.getElementById('viewAqLocation').textContent = aq.location_name;
+  if(document.getElementById('viewAqIndex')) document.getElementById('viewAqIndex').textContent = aq.aqi;
   
   const statusBadge = document.getElementById('viewAqStatus');
   statusBadge.textContent = aq.quality_level;
   statusBadge.className = `badge bg-${getQualityColor(aq.quality_level)}`;
   
-  document.getElementById('viewAqPm25').textContent = aq.pm2_5 ?? '-';
-  document.getElementById('viewAqPm10').textContent = aq.pm10 ?? '-';
-  document.getElementById('viewAqO3').textContent = aq.o3 ?? '-';
-  document.getElementById('viewAqNo2').textContent = aq.no2 ?? '-';
-  document.getElementById('viewAqCo').textContent = aq.co ?? '-';
-  document.getElementById('viewAqRecordedAt').textContent = aq.recorded_at ? formatDate(aq.recorded_at) : '-';
+  if(document.getElementById('viewAqPm25')) document.getElementById('viewAqPm25').textContent = aq.pm2_5 ?? '-';
+  if(document.getElementById('viewAqPm10')) document.getElementById('viewAqPm10').textContent = aq.pm10 ?? '-';
+  if(document.getElementById('viewAqO3')) document.getElementById('viewAqO3').textContent = aq.o3 ?? '-';
+  if(document.getElementById('viewAqNo2')) document.getElementById('viewAqNo2').textContent = aq.no2 ?? '-';
+  if(document.getElementById('viewAqCo')) document.getElementById('viewAqCo').textContent = aq.co ?? '-';
+  if(document.getElementById('viewAqRecordedAt')) document.getElementById('viewAqRecordedAt').textContent = aq.recorded_at ? formatDate(aq.recorded_at) : '-';
   
   const isAdmin = isAdminUser(currentUser);
   const editContainer = document.getElementById('viewAqEditContainer');
@@ -1234,13 +1234,13 @@ async function loadPublicTransportationData() {
       globalVehiclesData = vehicles;
       
       // Update counts
-      document.getElementById('activeVehiclesCount').textContent = vehicles.length;
+      if(document.getElementById('activeVehiclesCount')) document.getElementById('activeVehiclesCount').textContent = vehicles.length;
       
       // Load issues count
       const issuesResponse = await makeRequest('/public-transportation/admin/issues');
       if (issuesResponse?.success) {
         const issuesCount = Array.isArray(issuesResponse.data) ? issuesResponse.data.length : 0;
-        document.getElementById('issuesCount').textContent = issuesCount;
+        if(document.getElementById('issuesCount')) document.getElementById('issuesCount').textContent = issuesCount;
       }
 
       // Build table
@@ -1279,8 +1279,8 @@ async function loadCitizenFeedback() {
       const openCount = feedback.filter(f => f.status === 'open').length;
       const priorityCount = feedback.filter(f => f.priority === 'high' || f.priority === 'critical').length;
 
-      document.getElementById('openTicketsCount').textContent = openCount;
-      document.getElementById('priorityFeedbackCount').textContent = priorityCount;
+      if(document.getElementById('openTicketsCount')) document.getElementById('openTicketsCount').textContent = openCount;
+      if(document.getElementById('priorityFeedbackCount')) document.getElementById('priorityFeedbackCount').textContent = priorityCount;
 
       // Build table
       const feedbackHTML = feedback.map(item => `
@@ -2270,7 +2270,7 @@ function bindUserMenuForms() {
         showToast('Profil berhasil diperbarui', 'success');
         currentUser = response.data;
         setUser(currentUser);
-        document.getElementById('userName').textContent = currentUser.full_name || currentUser.username || 'User';
+        if(document.getElementById('userName')) document.getElementById('userName').textContent = currentUser.full_name || currentUser.username || 'User';
         bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
       } else {
         showToast(response?.message || 'Gagal memperbarui profil', 'danger');
