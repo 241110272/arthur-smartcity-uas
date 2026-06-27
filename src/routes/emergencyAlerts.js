@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const EmergencyAlertController = require('../controllers/EmergencyAlertController');
-const { authenticateJWT, isAdmin, isSuperAdmin, isUser } = require('../middleware/auth.middleware');
+const { authenticateJWT, isAdmin, isSuperAdmin, isUser } = require('../middleware/auth');
 
 /**
  * Emergency Alert Routes

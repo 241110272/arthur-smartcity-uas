@@ -53,7 +53,9 @@ CREATE TABLE IF NOT EXISTS traffic_data (
   INDEX idx_congestion (congestion_level)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS pedestrian_crossings (
+DROP TABLE IF EXISTS pedestrian_activity;
+DROP TABLE IF EXISTS pedestrian_crossings;
+CREATE TABLE pedestrian_crossings (
   id INT PRIMARY KEY AUTO_INCREMENT,
   location_name VARCHAR(100) NOT NULL,
   street_name VARCHAR(100) NOT NULL,
@@ -68,7 +70,7 @@ CREATE TABLE IF NOT EXISTS pedestrian_crossings (
   INDEX idx_street (street_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS pedestrian_activity (
+CREATE TABLE pedestrian_activity (
   id INT PRIMARY KEY AUTO_INCREMENT,
   crossing_id INT NOT NULL,
   pedestrian_count INT DEFAULT 0,
@@ -79,7 +81,8 @@ CREATE TABLE IF NOT EXISTS pedestrian_activity (
   INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS incident_reports (
+DROP TABLE IF EXISTS incident_reports;
+CREATE TABLE incident_reports (
   id INT PRIMARY KEY AUTO_INCREMENT,
   user_id INT NOT NULL,
   title VARCHAR(200) NOT NULL,
@@ -102,7 +105,8 @@ CREATE TABLE IF NOT EXISTS incident_reports (
 -- ========================================
 -- Smart City Feature 1: Real-time Traffic Monitoring
 -- ========================================
-CREATE TABLE IF NOT EXISTS traffic_monitoring (
+DROP TABLE IF EXISTS traffic_monitoring;
+CREATE TABLE traffic_monitoring (
   id INT PRIMARY KEY AUTO_INCREMENT,
   location_name VARCHAR(255) NOT NULL,
   latitude DECIMAL(10, 8) NOT NULL,
@@ -122,7 +126,8 @@ CREATE TABLE IF NOT EXISTS traffic_monitoring (
 -- ========================================
 -- Smart City Feature 2: Emergency Alert System
 -- ========================================
-CREATE TABLE IF NOT EXISTS emergency_alerts (
+DROP TABLE IF EXISTS emergency_alerts;
+CREATE TABLE emergency_alerts (
   id INT PRIMARY KEY AUTO_INCREMENT,
   alert_type ENUM('accident', 'hazard', 'emergency_vehicle', 'air_quality', 'natural_disaster') NOT NULL,
   severity ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
@@ -146,7 +151,8 @@ CREATE TABLE IF NOT EXISTS emergency_alerts (
 -- ========================================
 -- Smart City Feature 3: Air Quality Monitoring
 -- ========================================
-CREATE TABLE IF NOT EXISTS air_quality_monitoring (
+DROP TABLE IF EXISTS air_quality_monitoring;
+CREATE TABLE air_quality_monitoring (
   id INT PRIMARY KEY AUTO_INCREMENT,
   location_name VARCHAR(255) NOT NULL,
   latitude DECIMAL(10, 8) NOT NULL,
@@ -170,7 +176,9 @@ CREATE TABLE IF NOT EXISTS air_quality_monitoring (
 -- ========================================
 -- Smart City Feature 4: Public Transportation Management
 -- ========================================
-CREATE TABLE IF NOT EXISTS public_transportation (
+DROP TABLE IF EXISTS transportation_issues;
+DROP TABLE IF EXISTS public_transportation;
+CREATE TABLE public_transportation (
   id INT PRIMARY KEY AUTO_INCREMENT,
   vehicle_type ENUM('bus', 'mrt', 'lrt', 'minibus', 'tram', 'taxi') NOT NULL,
   vehicle_number VARCHAR(50) UNIQUE NOT NULL,
@@ -191,7 +199,7 @@ CREATE TABLE IF NOT EXISTS public_transportation (
   INDEX idx_coordinates (current_location_lat, current_location_lng)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS transportation_issues (
+CREATE TABLE transportation_issues (
   id INT PRIMARY KEY AUTO_INCREMENT,
   transport_id INT NOT NULL,
   issue_type ENUM('delay', 'breakdown', 'accident', 'crowded', 'other') NOT NULL,
@@ -211,7 +219,9 @@ CREATE TABLE IF NOT EXISTS transportation_issues (
 -- ========================================
 -- Smart City Feature 5: Citizen Feedback System
 -- ========================================
-CREATE TABLE IF NOT EXISTS citizen_feedback (
+DROP TABLE IF EXISTS feedback_responses;
+DROP TABLE IF EXISTS citizen_feedback;
+CREATE TABLE citizen_feedback (
   id INT PRIMARY KEY AUTO_INCREMENT,
   feedback_type ENUM('complaint', 'suggestion', 'compliment', 'report') NOT NULL,
   category ENUM('traffic', 'transportation', 'air_quality', 'general') NOT NULL,
@@ -235,7 +245,7 @@ CREATE TABLE IF NOT EXISTS citizen_feedback (
   INDEX idx_submitted_by (submitted_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS feedback_responses (
+CREATE TABLE feedback_responses (
   id INT PRIMARY KEY AUTO_INCREMENT,
   feedback_id INT NOT NULL,
   response_text TEXT NOT NULL,

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const AirQualityController = require('../controllers/AirQualityController');
-const { authenticateJWT, isAdmin, isUser } = require('../middleware/auth.middleware');
+const { authenticateJWT, isAdmin, isUser } = require('../middleware/auth');
 
 /**
  * Air Quality Monitoring Routes

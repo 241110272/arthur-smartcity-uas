@@ -29,7 +29,7 @@ const feedbackRoutes = require('./src/routes/feedback');
 // Import middleware
 const { validateRequest, logger } = require('./src/middleware/validation');
 const { errorHandler, notFoundHandler } = require('./src/middleware/errorHandler');
-const { authenticateJWT, isAdmin } = require('./src/middleware/auth.middleware');
+const { authenticateJWT, isAdmin } = require('./src/middleware/auth');
 
 const app = express();
 const server = http.createServer(app);

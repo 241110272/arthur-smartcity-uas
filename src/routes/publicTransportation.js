@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const PublicTransportationController = require('../controllers/PublicTransportationController');
-const { authenticateJWT, isAdmin, isUser } = require('../middleware/auth.middleware');
+const { authenticateJWT, isAdmin, isUser } = require('../middleware/auth');
 
 /**
  * Public Transportation Routes

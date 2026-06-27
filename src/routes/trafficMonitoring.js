@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const TrafficMonitoringController = require('../controllers/TrafficMonitoringController');
-const { authenticateJWT, isAdmin, isUser } = require('../middleware/auth.middleware');
+const { authenticateJWT, isAdmin, isUser } = require('../middleware/auth');
 
 /**
  * Traffic Monitoring Routes

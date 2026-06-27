@@ -33,7 +33,7 @@ const authorize = (...allowedRoles) => {
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (allowedRoles.length > 0 && !allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Anda tidak memiliki akses ke resource ini'
@@ -44,7 +44,18 @@ const authorize = (...allowedRoles) => {
   };
 };
 
+/**
+ * Specific Role Checkers untuk kemudahan penggunaan
+ */
+const isAdmin = [authMiddleware, authorize('admin', 'superadmin')];
+const isSuperAdmin = [authMiddleware, authorize('superadmin')];
+const isUser = [authMiddleware, authorize('user', 'admin', 'superadmin')];
+
 module.exports = {
   authMiddleware,
-  authorize
+  authenticateJWT: authMiddleware, // Alias for backward compatibility
+  authorize,
+  isAdmin,
+  isSuperAdmin,
+  isUser
 };

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CitizenFeedbackController = require('../controllers/CitizenFeedbackController');
-const { authenticateJWT, isAdmin, isUser } = require('../middleware/auth.middleware');
+const { authenticateJWT, isAdmin, isUser } = require('../middleware/auth');
 
 /**
  * Citizen Feedback Routes

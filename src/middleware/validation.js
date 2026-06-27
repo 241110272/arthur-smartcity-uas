@@ -37,10 +37,9 @@ function sanitizeInput(obj) {
     }
     
     if (typeof value === 'string') {
-      // Remove potential SQL injection characters
-      sanitized[key] = value
-        .replace(/['"`;]/g, '')
-        .trim();
+      // Basic string trim without removing valid punctuation
+      // (SQL injection is prevented by parameterized queries in DatabaseUtil)
+      sanitized[key] = value.trim();
     } else if (typeof value === 'object') {
       sanitized[key] = sanitizeInput(value);
     } else {
